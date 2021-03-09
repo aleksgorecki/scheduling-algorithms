@@ -1,0 +1,16 @@
+Każdego rodzaju linie produkcyjne: fabryki sprzętu AGD, fabryki samochodów.
+System przepływowy jest wykorzystywany dla linii produkcyjnych, pochodzi od Henry’ego Forda. 
+Pozwala on na zmniejszenie kosztów produkcji z racji powtarzalności wykonywanych prac na poszczególnych stanowiskach.
+
+Przykładowo, w przypadku fabryki sprzętu AGD, jako zadanie możemy rozumieć przykładowo wyprodukowanie jednego urządzenia (np. mikrofalówki), 
+operacjami będzie tworzenie i łączenie kolejnych elementów tworzących to urządzenie. 
+Maszynami w tym przykładzie będą podmioty odpowiedzialne za wykonanie poszczególnego, jednego elementu zadania, czyli zespoły pracowników wraz ze sprzętem, bądź też sama 
+automatycznie działająca aparatura.
+
+Zakładając, że podany wyżej przykład objęty jest problemem przepływowym, podkreślic należy, że jedna maszyna (jeden oddzial fabryki) wykonywać może tylko jedno zadanie 
+(wyprodukować jedno urządzenie), wykonując operacje z którego składa się to zadanie w określnej kolejności 
+(przykładowo, zanim stworzy się oprogramowanie działajace w takim urządzeniu, należy zdecydować się na architekturę prcoesora pracującego w urządzeniu).
+
+Innym przykładem problemu szeregowania zadania, który niekoniecznie związany jest z procesem technologicznym, mógłoby być wybranie tras kurierom w firmie dostarczajacej przesyłki. 
+Przykładowo, zadaniem byłoby dowiezienie wszystkich przesłyek odbiorcom w jednej części miasta, operacjami dostarczenie przesyłki do pojedynczego odbiorcy w tej części miasta, 
+a maszynami poszczególni kurierzy.
