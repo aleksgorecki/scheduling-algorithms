@@ -51,6 +51,7 @@ def read_scheduling_data_file(filename: str, n_sets: int) -> typing.List[Schedul
     return ret
 
 
+# to do
 def draw_gantt_plot(data: SchedulingData):
     pass
 
@@ -64,11 +65,16 @@ def naive_scheduling(data: SchedulingData):
     data.schedule = schedule
 
 
+# to do
 def johnson_rule(data: SchedulingData):
     pass
 
 
-sched = read_scheduling_data_file("neh.data.txt", 3)`
+def print_scheduling_data_list(sd_list: typing.List[SchedulingData]):
+    for data in sd_list:
+        print(data)
+
+sched = read_scheduling_data_file("neh.data.txt", 3)
 print(sched[0])
 naive_scheduling(sched[0])
 print(sched[0].schedule)
