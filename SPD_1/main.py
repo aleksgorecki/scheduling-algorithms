@@ -9,7 +9,7 @@ class SchedulingData:
     n_machines: int  # ilość maszyn
     t_matrix: np.array  # macierz o wymiarach n_jobs x n_machines,
     # zawiera czasy wykonania zadań na maszynach
-    schedule: np.array = None
+    schedule: list = None
 
     def __init__(self, name: str, n_jobs: int, n_machines: int, t_matrix: np.array, schedule: np.array = None):
         self.name = name
@@ -31,7 +31,7 @@ class SchedulingData:
         return str(self)
 
 
-def read_scheduling_data_file(filename: str, n_sets: int) -> typing.List[SchedulingData]:
+def read_data_file(filename: str, n_sets: int) -> typing.List[SchedulingData]:
     file = open(filename)
     ret = []  # lista do której będą dodawane wczytywane zestawy danych
     sets_read = 0  # licznik wczytanych zestawów
@@ -51,30 +51,71 @@ def read_scheduling_data_file(filename: str, n_sets: int) -> typing.List[Schedul
     return ret
 
 
-# to do
-def draw_gantt_plot(data: SchedulingData):
-    pass
-
-
-#  tworzy macierz harmonogramu zadań, szeregując zadania rosnąco dla każdej maszyny (najprostszy algorytm)
-def naive_scheduling(data: SchedulingData):
-    schedule = np.full(shape=(data.n_machines, data.n_jobs), fill_value=-1, dtype=int)
-    for machine in range(0, data.n_machines, 1):
-        for job in range(0, data.n_jobs, 1):
-            schedule[machine][job] = job
-    data.schedule = schedule
-
-
-# to do
-def johnson_rule(data: SchedulingData):
-    pass
+def makespan(data: SchedulingData) -> int:
+    if data.schedule is None:
+        print("Dataset not yet scheduled!")
+        pass
+    jobs_timespan_matrix = np.array(data.t_matrix.shape)
+    for task in range(0, data.n_jobs, 1):
+        for machine in range(0, data.n_machines, 1):
+            jobs_timespan_matrix[task][machine] = 1
+            pass
+    return jobs_timespan_matrix[data.n_jobs-1][data.n_machines-1]
 
 
 def print_scheduling_data_list(sd_list: typing.List[SchedulingData]):
     for data in sd_list:
         print(data)
 
-sched = read_scheduling_data_file("neh.data.txt", 3)
-print(sched[0])
-naive_scheduling(sched[0])
+
+def verify_dataset(data: SchedulingData) -> bool:
+    if data.t_matrix.shape != tuple([data.n_jobs, data.n_machines]):
+        return False
+    return True
+
+
+#  tworzy macierz harmonogramu zadań, szeregując zadania rosnąco dla każdej maszyny (najprostszy algorytm)
+def naive_scheduling(data: SchedulingData):
+    data.schedule = list(range(0, data.n_jobs, 1))
+
+
+# to do
+def johnson_rule_2(data: SchedulingData):
+    jobs_to_schedule = list(range(0, data.n_jobs, 1))
+    tail_list, head_list = [], []
+    working_matrix = data.t_matrix
+    ignore_tag = np.amax(working_matrix) + 1
+    while jobs_to_schedule:
+        min_indices = np.unravel_index(np.argmin(working_matrix), data.t_matrix.shape)
+        if min_indices[1] == 0:
+            tail_list.append(min_indices[0])
+        else:
+            head_list = [min_indices[0]] + head_list
+        jobs_to_schedule.remove(min_indices[0])
+        working_matrix[min_indices[0]][0] = ignore_tag
+        working_matrix[min_indices[0]][1] = ignore_tag
+    data.schedule = tail_list + head_list
+
+
+def johnson_rule_multiple(data: SchedulingData):
+    pass
+
+
+def permutation(data: SchedulingData):
+    np.random.permutation()
+    pass
+
+
+def gantt_chart(data: SchedulingData):
+    if data.schedule is None:
+        print("Dataset not yet scheduled!")
+        pass
+    pass
+
+
+sched = read_data_file("test.data.txt", 1)
+# print(sched[0])
+johnson_rule_2(sched[0])
 print(sched[0].schedule)
+# naive_scheduling(sched[0])
+# print(sched[0].schedule)
