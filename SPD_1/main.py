@@ -1,5 +1,6 @@
 import typing
 import numpy as np
+from matplotlib import pyplot as plt
 
 
 # struktura przechowująca dane o zestawie danych wykorzystywanych do testowania algorytmów szeregowania zadań
@@ -58,6 +59,8 @@ def makespan(data: SchedulingData) -> int:
     jobs_timespan_matrix = np.array(data.t_matrix.shape)
     for task in range(0, data.n_jobs, 1):
         for machine in range(0, data.n_machines, 1):
+            if machine == 0:
+
             jobs_timespan_matrix[task][machine] = 1
             pass
     return jobs_timespan_matrix[data.n_jobs-1][data.n_machines-1]
@@ -110,6 +113,17 @@ def gantt_chart(data: SchedulingData):
     if data.schedule is None:
         print("Dataset not yet scheduled!")
         pass
+    figure, gantt = plt.subplots()
+    gantt.set_xlabel("Time")
+    gantt.set_ylabel("Machine")
+    gantt.grid(True)
+    gantt.set_xlim(0, makespan(data))
+    gantt.set_ylim(0, data.n_machines*10 + 20)
+    gantt.set_yticks(machine*10+10 for machine in range(0, data.n_machines, 1))
+    gantt.set_yticklabels(str(machine) for machine in range(0, data.n_machines, 1))
+    for job in range(0, data.n_jobs, 1):
+        gantt.broken_barh()
+    plt.show(figure)
     pass
 
 
