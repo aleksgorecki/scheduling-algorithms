@@ -56,14 +56,20 @@ def makespan(data: SchedulingData) -> int:
     if data.schedule is None:
         print("Dataset not yet scheduled!")
         pass
-    jobs_timespan_matrix = np.array(data.t_matrix.shape)
-    for task in range(0, data.n_jobs, 1):
-        for machine in range(0, data.n_machines, 1):
-            if machine == 0:
-
-            jobs_timespan_matrix[task][machine] = 1
-            pass
-    return jobs_timespan_matrix[data.n_jobs-1][data.n_machines-1]
+    timespan_matrix = np.array(data.t_matrix)  # kopia do pracy
+    for j in range(0, data.n_jobs, 1):
+        for m in range(0, data.n_machines, 1):
+            if j == 0:
+                if m == 0:
+                    timespan_matrix[j][m] = data.t_matrix[data.schedule[j]][m]
+                else:
+                    timespan_matrix[j][m] = timespan_matrix[j][m-1] + data.t_matrix[data.schedule[j]][m]
+            else:
+                if m == 0:
+                    timespan_matrix[j][m] = timespan_matrix[j-1][m] + data.t_matrix[data.schedule[j]][m]
+                else:
+                    timespan_matrix[j][m] = np.amax([timespan_matrix[j-1][m], timespan_matrix[j][m-1]]) + data.t_matrix[data.schedule[j]][m]
+    return timespan_matrix[data.n_jobs-1][data.n_machines-1]
 
 
 def print_scheduling_data_list(sd_list: typing.List[SchedulingData]):
@@ -86,7 +92,7 @@ def naive_scheduling(data: SchedulingData):
 def johnson_rule_2(data: SchedulingData):
     jobs_to_schedule = list(range(0, data.n_jobs, 1))
     tail_list, head_list = [], []
-    working_matrix = data.t_matrix
+    working_matrix = np.array(data.t_matrix)  # kopia do pracy
     ignore_tag = np.amax(working_matrix) + 1
     while jobs_to_schedule:
         min_indices = np.unravel_index(np.argmin(working_matrix), data.t_matrix.shape)
@@ -118,18 +124,33 @@ def gantt_chart(data: SchedulingData):
     gantt.set_ylabel("Machine")
     gantt.grid(True)
     gantt.set_xlim(0, makespan(data))
-    gantt.set_ylim(0, data.n_machines*10 + 20)
-    gantt.set_yticks(machine*10+10 for machine in range(0, data.n_machines, 1))
+    gantt.set_ylim(0, data.n_machines*10 + 10)
+    gantt.set_yticks([machine*10+10 for machine in range(0, data.n_machines, 1)])
     gantt.set_yticklabels(str(machine) for machine in range(0, data.n_machines, 1))
-    for job in range(0, data.n_jobs, 1):
-        gantt.broken_barh()
-    plt.show(figure)
-    pass
+
+    timespan_matrix = np.array(data.t_matrix)  # kopia do pracy
+    for j in range(0, data.n_jobs, 1):
+        for m in range(0, data.n_machines, 1):
+            if j == 0:
+                if m == 0:
+                    timespan_matrix[j][m] = data.t_matrix[data.schedule[j]][m]
+                else:
+                    timespan_matrix[j][m] = timespan_matrix[j][m - 1] + data.t_matrix[data.schedule[j]][m]
+            else:
+                if m == 0:
+                    timespan_matrix[j][m] = timespan_matrix[j - 1][m] + data.t_matrix[data.schedule[j]][m]
+                else:
+                    timespan_matrix[j][m] = np.amax([timespan_matrix[j - 1][m], timespan_matrix[j][m - 1]]) + data.t_matrix[data.schedule[j]][m]
+    color_vec = ['red', 'blue', 'green', 'orange', 'purple']
+    for j in range(0, data.n_jobs, 1):
+        for m in range(0, data.n_machines, 1):
+            gantt.broken_barh([(timespan_matrix[data.schedule[j]][m]-data.t_matrix[j][m], data.t_matrix[j][m])], (10*m+5, 10), facecolors = f"tab:{color_vec[j]}")
+    plt.show()
 
 
 sched = read_data_file("test.data.txt", 1)
-# print(sched[0])
-johnson_rule_2(sched[0])
-print(sched[0].schedule)
-# naive_scheduling(sched[0])
-# print(sched[0].schedule)
+if verify_dataset(sched[0]):
+    johnson_rule_2(sched[0])
+    gantt_chart(sched[0])
+else:
+    print("Dataset is not in correct format!")
