@@ -52,7 +52,7 @@ def read_data_file(filename: str, n_sets: int) -> typing.List[SchedulingData]:
     return ret
 
 
-def makespan(data: SchedulingData) -> int:
+def makespan(data: SchedulingData, return_timespan_matrix: bool = False) -> int or np.array:
     if data.schedule is None:
         print("Dataset not yet scheduled!")
         pass
@@ -69,7 +69,10 @@ def makespan(data: SchedulingData) -> int:
                     timespan_matrix[j][m] = timespan_matrix[j-1][m] + data.t_matrix[data.schedule[j]][m]
                 else:
                     timespan_matrix[j][m] = np.amax([timespan_matrix[j-1][m], timespan_matrix[j][m-1]]) + data.t_matrix[data.schedule[j]][m]
-    return timespan_matrix[data.n_jobs-1][data.n_machines-1]
+    if return_timespan_matrix:
+        return timespan_matrix
+    else:
+        return timespan_matrix[data.n_jobs-1][data.n_machines-1]
 
 
 def print_scheduling_data_list(sd_list: typing.List[SchedulingData]):
@@ -131,20 +134,7 @@ def gantt_chart(data: SchedulingData):
     gantt.set_ylim(0, data.n_machines*10 + 10)
     gantt.set_yticks([machine*10+10 for machine in range(0, data.n_machines, 1)])
     gantt.set_yticklabels(str(machine) for machine in range(0, data.n_machines, 1))
-
-    timespan_matrix = np.array(data.t_matrix)  # kopia do pracy
-    for j in range(0, data.n_jobs, 1):
-        for m in range(0, data.n_machines, 1):
-            if j == 0:
-                if m == 0:
-                    timespan_matrix[j][m] = data.t_matrix[data.schedule[j]][m]
-                else:
-                    timespan_matrix[j][m] = timespan_matrix[j][m - 1] + data.t_matrix[data.schedule[j]][m]
-            else:
-                if m == 0:
-                    timespan_matrix[j][m] = timespan_matrix[j - 1][m] + data.t_matrix[data.schedule[j]][m]
-                else:
-                    timespan_matrix[j][m] = np.amax([timespan_matrix[j - 1][m], timespan_matrix[j][m - 1]]) + data.t_matrix[data.schedule[j]][m]
+    timespan_matrix = makespan(data, return_timespan_matrix=True)
     color_vec = ['red', 'blue', 'green', 'orange', 'purple']
     for j in range(0, data.n_jobs, 1):
         for m in range(0, data.n_machines, 1):
