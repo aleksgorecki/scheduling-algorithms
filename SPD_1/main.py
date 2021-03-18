@@ -90,6 +90,9 @@ def naive_scheduling(data: SchedulingData):
 
 # to do
 def johnson_rule_2(data: SchedulingData):
+    if data.n_machines != 2:
+        print("Number of machines in the dataset is not equal to 2!")
+        pass
     jobs_to_schedule = list(range(0, data.n_jobs, 1))
     tail_list, head_list = [], []
     working_matrix = np.array(data.t_matrix)  # kopia do pracy
@@ -101,8 +104,8 @@ def johnson_rule_2(data: SchedulingData):
         else:
             head_list = [min_indices[0]] + head_list
         jobs_to_schedule.remove(min_indices[0])
-        working_matrix[min_indices[0]][0] = ignore_tag
-        working_matrix[min_indices[0]][1] = ignore_tag
+        for m in range(0, data.n_machines, 1):
+            working_matrix[min_indices[0]][m] = ignore_tag
     data.schedule = tail_list + head_list
 
 
@@ -120,6 +123,7 @@ def gantt_chart(data: SchedulingData):
         print("Dataset not yet scheduled!")
         pass
     figure, gantt = plt.subplots()
+    gantt.set_title("Gantt chart for " + data.name)
     gantt.set_xlabel("Time")
     gantt.set_ylabel("Machine")
     gantt.grid(True)
@@ -144,13 +148,15 @@ def gantt_chart(data: SchedulingData):
     color_vec = ['red', 'blue', 'green', 'orange', 'purple']
     for j in range(0, data.n_jobs, 1):
         for m in range(0, data.n_machines, 1):
-            gantt.broken_barh([(timespan_matrix[j][m]-data.t_matrix[data.schedule[j]][m], data.t_matrix[data.schedule[j]][m])], (10*m+5, 10), facecolors = f"tab:{color_vec[j]}")
+            gantt.broken_barh([(timespan_matrix[j][m]-data.t_matrix[data.schedule[j]][m], data.t_matrix[data.schedule[j]][m])], (10*m+5, 10), facecolors = f"tab:{color_vec[j%len(color_vec)]}")
     plt.show()
 
 
 sched = read_data_file("test.data.txt", 1)
 if verify_dataset(sched[0]):
     johnson_rule_2(sched[0])
+    gantt_chart(sched[0])
+    naive_scheduling(sched[0])
     gantt_chart(sched[0])
 else:
     print("Dataset is not in correct format!")
