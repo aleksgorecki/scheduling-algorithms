@@ -144,7 +144,7 @@ def gantt_chart(data: SchedulingData):
     color_vec = ['red', 'blue', 'green', 'orange', 'purple']
     for j in range(0, data.n_jobs, 1):
         for m in range(0, data.n_machines, 1):
-            gantt.broken_barh([(timespan_matrix[data.schedule[j]][m]-data.t_matrix[j][m], data.t_matrix[j][m])], (10*m+5, 10), facecolors = f"tab:{color_vec[j]}")
+            gantt.broken_barh([(timespan_matrix[j][m]-data.t_matrix[data.schedule[j]][m], data.t_matrix[data.schedule[j]][m])], (10*m+5, 10), facecolors = f"tab:{color_vec[j]}")
     plt.show()
 
 
