@@ -52,10 +52,10 @@ def read_data_file(filename: str, n_sets: int) -> typing.List[SchedulingData]:
     return ret
 
 
-def makespan(data: SchedulingData, return_timespan_matrix: bool = False) -> int or np.array:
+def makespan(data: SchedulingData, return_value_picker: str = "cmax") -> int or int and np.array or np.array:
     if data.schedule is None:
         print("Dataset not yet scheduled!")
-        pass
+        return
     timespan_matrix = np.array(data.t_matrix)  # kopia do pracy
     for j in range(0, data.n_jobs, 1):
         for m in range(0, data.n_machines, 1):
@@ -69,8 +69,10 @@ def makespan(data: SchedulingData, return_timespan_matrix: bool = False) -> int 
                     timespan_matrix[j][m] = timespan_matrix[j-1][m] + data.t_matrix[data.schedule[j]][m]
                 else:
                     timespan_matrix[j][m] = np.amax([timespan_matrix[j-1][m], timespan_matrix[j][m-1]]) + data.t_matrix[data.schedule[j]][m]
-    if return_timespan_matrix:
+    if return_value_picker == "matrix":
         return timespan_matrix
+    elif return_value_picker == "both":
+        return timespan_matrix[data.n_jobs-1][data.n_machines-1], timespan_matrix
     else:
         return timespan_matrix[data.n_jobs-1][data.n_machines-1]
 
@@ -87,7 +89,7 @@ def verify_dataset(data: SchedulingData) -> bool:
 
 
 #  tworzy macierz harmonogramu zadań, szeregując zadania rosnąco dla każdej maszyny (najprostszy algorytm)
-def naive_scheduling(data: SchedulingData):
+def naive(data: SchedulingData):
     data.schedule = list(range(0, data.n_jobs, 1))
 
 
@@ -95,7 +97,7 @@ def naive_scheduling(data: SchedulingData):
 def johnson_rule_2(data: SchedulingData):
     if data.n_machines != 2:
         print("Number of machines in the dataset is not equal to 2!")
-        pass
+        return
     jobs_to_schedule = list(range(0, data.n_jobs, 1))
     tail_list, head_list = [], []
     working_matrix = np.array(data.t_matrix)  # kopia do pracy
@@ -124,29 +126,32 @@ def permutation(data: SchedulingData):
 def gantt_chart(data: SchedulingData):
     if data.schedule is None:
         print("Dataset not yet scheduled!")
-        pass
+        return
+    [c_max, timespan_matrix] = makespan(data, return_value_picker="both")
     figure, gantt = plt.subplots()
     gantt.set_title("Gantt chart for " + data.name)
     gantt.set_xlabel("Time")
     gantt.set_ylabel("Machine")
     gantt.grid(True)
-    gantt.set_xlim(0, makespan(data))
-    gantt.set_ylim(0, data.n_machines*10 + 10)
-    gantt.set_yticks([machine*10+10 for machine in range(0, data.n_machines, 1)])
-    gantt.set_yticklabels(str(machine) for machine in range(0, data.n_machines, 1))
-    timespan_matrix = makespan(data, return_timespan_matrix=True)
-    color_vec = ['red', 'blue', 'green', 'orange', 'purple']
+    gantt.set_xlim(0, c_max)
+    machine_block_height = 100/data.n_machines
+    machine_block_offset = machine_block_height/2
+    gantt.set_ylim(0, data.n_machines*machine_block_height + machine_block_offset*2)
+    gantt.set_yticks([machine*machine_block_height + machine_block_offset*2 for machine in range(0, data.n_machines, 1)])
+    gantt.set_yticklabels(str(machine) for machine in range(data.n_machines-1, -1, -1))
+    job_colors = ["red", "blue", "pink", "green", "orange", "purple"]
     for j in range(0, data.n_jobs, 1):
         for m in range(0, data.n_machines, 1):
-            gantt.broken_barh([(timespan_matrix[j][m]-data.t_matrix[data.schedule[j]][m], data.t_matrix[data.schedule[j]][m])], (10*m+5, 10), facecolors = f"tab:{color_vec[j%len(color_vec)]}")
+            job_duration = data.t_matrix[data.schedule[j]][m]
+            job_beginning_time = timespan_matrix[j][m] - job_duration
+            gantt.broken_barh([(job_beginning_time, job_duration)], (data.n_machines*machine_block_height-(machine_block_height*m+machine_block_offset), machine_block_height), facecolors=f"tab:{job_colors[j%len(job_colors)]}")
+            gantt.text(x=job_beginning_time+job_duration/2, y=(data.n_machines*machine_block_height-(machine_block_height*m)), s=str(data.schedule[j]), horizontalalignment="center", verticalalignment="center")
     plt.show()
 
 
-sched = read_data_file("test.data.txt", 1)
-if verify_dataset(sched[0]):
-    johnson_rule_2(sched[0])
-    gantt_chart(sched[0])
-    naive_scheduling(sched[0])
-    gantt_chart(sched[0])
+dummy = read_data_file("test.data.txt", 1)[0]
+if verify_dataset(dummy):
+    naive(dummy)
+    gantt_chart(dummy)
 else:
     print("Dataset is not in correct format!")
