@@ -56,25 +56,28 @@ def makespan(data: SchedulingData, return_value_picker: str = "cmax") -> int or 
     if data.schedule is None:
         print("Dataset not yet scheduled!")
         return
-    timespan_matrix = np.array(data.t_matrix)  # kopia do pracy
+    #  macierz czasów zakończenia zadań, indeksy zadań (wierszy)
+    #  zgodne z poszeregowaną kolejnością zadań (data.schedule), a nie absolutnymi indeksami zadań (jak w data.t_matrix)
+    fin_matrix = np.array(data.t_matrix)
     for j in range(0, data.n_jobs, 1):
         for m in range(0, data.n_machines, 1):
             if j == 0:
                 if m == 0:
-                    timespan_matrix[j][m] = data.t_matrix[data.schedule[j]][m]
+                    fin_matrix[j][m] = data.t_matrix[data.schedule[j]][m]
                 else:
-                    timespan_matrix[j][m] = timespan_matrix[j][m-1] + data.t_matrix[data.schedule[j]][m]
+                    fin_matrix[j][m] = fin_matrix[j][m - 1] + data.t_matrix[data.schedule[j]][m]
             else:
                 if m == 0:
-                    timespan_matrix[j][m] = timespan_matrix[j-1][m] + data.t_matrix[data.schedule[j]][m]
+                    fin_matrix[j][m] = fin_matrix[j - 1][m] + data.t_matrix[data.schedule[j]][m]
                 else:
-                    timespan_matrix[j][m] = np.amax([timespan_matrix[j-1][m], timespan_matrix[j][m-1]]) + data.t_matrix[data.schedule[j]][m]
+                    fin_matrix[j][m] = \
+                        np.amax([fin_matrix[j - 1][m], fin_matrix[j][m - 1]]) + data.t_matrix[data.schedule[j]][m]
     if return_value_picker == "matrix":
-        return timespan_matrix
+        return fin_matrix
     elif return_value_picker == "both":
-        return timespan_matrix[data.n_jobs-1][data.n_machines-1], timespan_matrix
+        return fin_matrix[data.n_jobs - 1][data.n_machines - 1], fin_matrix
     else:
-        return timespan_matrix[data.n_jobs-1][data.n_machines-1]
+        return fin_matrix[data.n_jobs - 1][data.n_machines - 1]
 
 
 def print_scheduling_data_list(sd_list: typing.List[SchedulingData]):
@@ -93,7 +96,6 @@ def naive(data: SchedulingData):
     data.schedule = list(range(0, data.n_jobs, 1))
 
 
-# to do
 def johnson_rule_2(data: SchedulingData):
     if data.n_machines != 2:
         print("Number of machines in the dataset is not equal to 2!")
@@ -101,21 +103,32 @@ def johnson_rule_2(data: SchedulingData):
     jobs_to_schedule = list(range(0, data.n_jobs, 1))
     tail_list, head_list = [], []
     working_matrix = np.array(data.t_matrix)  # kopia do pracy
-    ignore_tag = np.amax(working_matrix) + 1
-    while jobs_to_schedule:
-        min_indices = np.unravel_index(np.argmin(working_matrix), data.t_matrix.shape)
+    ignore_tag = np.amax(working_matrix) + 1  # najwyższa wartość w macierzy, ignorowanie już uszeregowanych zadań
+    while jobs_to_schedule:  # dopóki nie uszeregowano wszystkich zadań
+        min_indices = np.unravel_index(np.argmin(working_matrix), data.t_matrix.shape)  # (j,m) najszybszej operacji
         if min_indices[1] == 0:
             tail_list.append(min_indices[0])
         else:
             head_list = [min_indices[0]] + head_list
         jobs_to_schedule.remove(min_indices[0])
         for m in range(0, data.n_machines, 1):
-            working_matrix[min_indices[0]][m] = ignore_tag
-    data.schedule = tail_list + head_list
+            working_matrix[min_indices[0]][m] = ignore_tag  # usuniecie uszeregowanego zadania poprzez nadpisanie czasu
+    data.schedule = tail_list + head_list  # harmonogram w postaci uszeregowanych indeksów zadań do wykonania
 
 
+# naprawic !!!
 def johnson_rule_multiple(data: SchedulingData):
-    pass
+    imaginary_matrix = np.zeros((data.n_jobs, 2))
+    for j in range(0, data.n_jobs, 1):
+        if data.n_machines % 2 == 0:
+            imaginary_matrix[j][0] = np.sum(data.t_matrix[j][0:int(data.n_jobs / 2) - 1])
+            imaginary_matrix[j][1] = np.sum(data.t_matrix[j][int(data.n_jobs / 2):data.n_jobs - 1])
+        else:
+            imaginary_matrix[j][0] = np.sum(data.t_matrix[j][0:int(data.n_jobs / 2)])
+            imaginary_matrix[j][1] = np.sum(data.t_matrix[j][int(data.n_jobs / 2) + 1:data.n_jobs - 1])
+    imaginary_data = SchedulingData(name="dummy", n_jobs=data.n_jobs, n_machines=2, t_matrix=imaginary_matrix)
+    johnson_rule_2(imaginary_data)
+    data.schedule = imaginary_data.schedule
 
 
 def permutation(data: SchedulingData):
@@ -134,24 +147,34 @@ def gantt_chart(data: SchedulingData):
     gantt.set_ylabel("Machine")
     gantt.grid(True)
     gantt.set_xlim(0, c_max)
-    machine_block_height = 100/data.n_machines
-    machine_block_offset = machine_block_height/2
-    gantt.set_ylim(0, data.n_machines*machine_block_height + machine_block_offset*2)
-    gantt.set_yticks([machine*machine_block_height + machine_block_offset*2 for machine in range(0, data.n_machines, 1)])
-    gantt.set_yticklabels(str(machine) for machine in range(data.n_machines-1, -1, -1))
+    barh_height = 100 / data.n_machines
+    barh_offset = barh_height / 2
+    gantt.set_ylim(0, data.n_machines * barh_height + barh_offset * 2)
+    gantt.set_yticks([machine * barh_height + barh_offset * 2 for machine in range(0, data.n_machines, 1)])
+    gantt.set_yticklabels(str(machine) for machine in range(data.n_machines-1, -1, -1))  # kolejność maszyn od góry
     job_colors = ["red", "blue", "pink", "green", "orange", "purple"]
     for j in range(0, data.n_jobs, 1):
         for m in range(0, data.n_machines, 1):
             job_duration = data.t_matrix[data.schedule[j]][m]
             job_beginning_time = timespan_matrix[j][m] - job_duration
-            gantt.broken_barh([(job_beginning_time, job_duration)], (data.n_machines*machine_block_height-(machine_block_height*m+machine_block_offset), machine_block_height), facecolors=f"tab:{job_colors[j%len(job_colors)]}")
-            gantt.text(x=job_beginning_time+job_duration/2, y=(data.n_machines*machine_block_height-(machine_block_height*m)), s=str(data.schedule[j]), horizontalalignment="center", verticalalignment="center")
+            gantt.broken_barh([(job_beginning_time, job_duration)],
+                              (data.n_machines * barh_height - (barh_height * m + barh_offset), barh_height),
+                              facecolors=f"tab:{job_colors[j % len(job_colors)]}")  # bloki zadan
+            gantt.text(x=job_beginning_time+job_duration/2,
+                       y=(data.n_machines * barh_height - (barh_height * m)),
+                       s=str(data.schedule[j]),
+                       horizontalalignment="center",
+                       verticalalignment="center")  # indeks zadań na blokach odpowiadających zadaniom
     plt.show()
 
 
-dummy = read_data_file("test.data.txt", 1)[0]
+dummy = read_data_file("neh.data.txt", 1)[0]
 if verify_dataset(dummy):
     naive(dummy)
+    print(makespan(dummy))
+    gantt_chart(dummy)
+    johnson_rule_multiple(dummy)
+    print(makespan(dummy))
     gantt_chart(dummy)
 else:
     print("Dataset is not in correct format!")
