@@ -1,6 +1,7 @@
 import typing
 import numpy as np
 from matplotlib import pyplot as plt
+import itertools
 
 
 # struktura przechowująca dane o zestawie danych wykorzystywanych do testowania algorytmów szeregowania zadań
@@ -97,14 +98,15 @@ def verify_dataset(data: SchedulingData) -> bool:
 
 
 #  tworzy macierz harmonogramu zadań, szeregując zadania rosnąco dla każdej maszyny (najprostszy algorytm)
-def naive(data: SchedulingData):
+def naive(data: SchedulingData) -> int:
     data.schedule = list(range(0, data.n_jobs, 1))
+    return makespan(data)
 
 
-def johnson_rule_2(data: SchedulingData):
+def johnson_rule_2(data: SchedulingData) -> int:
     if data.n_machines != 2:
         print("Number of machines in the dataset is not equal to 2!")
-        return
+        return -1
     jobs_to_schedule = list(range(0, data.n_jobs, 1))
     tail_list, head_list = [], []
     working_matrix = np.array(data.t_matrix)  # kopia do pracy
@@ -119,10 +121,13 @@ def johnson_rule_2(data: SchedulingData):
         for m in range(0, data.n_machines, 1):
             working_matrix[min_indices[0]][m] = ignore_tag  # usuniecie uszeregowanego zadania poprzez nadpisanie czasu
     data.schedule = tail_list + head_list  # harmonogram w postaci uszeregowanych indeksów zadań do wykonania
+    return int(makespan(data))
 
 
-# naprawic !!!
-def johnson_rule_multiple(data: SchedulingData):
+def johnson_rule_multiple(data: SchedulingData) -> int:
+    if data.n_machines == 2:
+        johnson_rule_2(data)
+        return makespan(data)
     imaginary_matrix = np.zeros((data.n_jobs, 2))
     if data.n_machines % 2 == 0:
         center = int((data.n_machines-1)/2)
@@ -137,11 +142,18 @@ def johnson_rule_multiple(data: SchedulingData):
     imaginary_data = SchedulingData(name="imaginary_tmp", n_jobs=data.n_jobs, n_machines=2, t_matrix=imaginary_matrix)
     johnson_rule_2(imaginary_data)
     data.schedule = imaginary_data.schedule
+    return makespan(data)
 
 
-def permutation(data: SchedulingData):
-    np.random.permutation()
-    pass
+def bruteforce(data: SchedulingData) -> int:
+    brute_schedules = list(itertools.permutations(list(range(0, data.n_jobs, 1))))
+    makespan_list = []
+    for schedule in brute_schedules:
+        makespan_list.append(makespan(SchedulingData(name="tmp", n_jobs=data.n_jobs, n_machines=data.n_machines,
+                                                t_matrix=data.t_matrix, schedule=schedule)))
+    min_makespan_index = np.argmin(np.array(makespan_list))
+    data.schedule = brute_schedules[min_makespan_index]
+    return makespan_list[min_makespan_index]
 
 
 def gantt_chart(data: SchedulingData):
@@ -176,11 +188,14 @@ def gantt_chart(data: SchedulingData):
     plt.show()
 
 
-dummy = read_data_file("neh.data.txt", 1)[0]
+dummy = read_data_file("neh.data.txt", 2)[1]
 if verify_dataset(dummy):
-    naive(dummy)
-    print(makespan(dummy))
-    johnson_rule_multiple(dummy)
-    print(makespan(dummy))
+    print(bruteforce(dummy))
+    gantt_chart(dummy)
+    print(johnson_rule_multiple(dummy))
+    gantt_chart(dummy)
+    print(naive(dummy))
+    gantt_chart(dummy)
+
 else:
     print("Dataset is not in correct format!")
