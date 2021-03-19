@@ -26,10 +26,15 @@ class SchedulingData:
             for column in range(0, self.n_machines-1, 1):
                 t_matrix_str = t_matrix_str + str(int(self.t_matrix[row][column])) + " "
             t_matrix_str = t_matrix_str + str(int(self.t_matrix[row][self.n_machines-1])) + "\n"
-        return self.name + str(int(self.n_jobs)) + " " + str(int(self.n_machines)) + t_matrix_str
+        return self.name + "\n" + str(int(self.n_jobs)) + " " + str(int(self.n_machines)) + t_matrix_str
 
     def __repr__(self):
         return str(self)
+
+
+def custom_dataset(n_jobs: int, n_machines: int, name: str = "custom_dataset"):
+    t_matrix = np.random.randint(n_jobs, n_machines)
+    return SchedulingData(name=name, n_jobs=n_jobs, n_machines=n_machines, t_matrix=t_matrix)
 
 
 def read_data_file(filename: str, n_sets: int) -> typing.List[SchedulingData]:
@@ -119,14 +124,17 @@ def johnson_rule_2(data: SchedulingData):
 # naprawic !!!
 def johnson_rule_multiple(data: SchedulingData):
     imaginary_matrix = np.zeros((data.n_jobs, 2))
+    if data.n_machines % 2 == 0:
+        center = int((data.n_machines-1)/2)
+    else:
+        center = int((data.n_machines-1)/2) + 1
     for j in range(0, data.n_jobs, 1):
-        if data.n_machines % 2 == 0:
-            imaginary_matrix[j][0] = np.sum(data.t_matrix[j][0:int(data.n_jobs / 2) - 1])
-            imaginary_matrix[j][1] = np.sum(data.t_matrix[j][int(data.n_jobs / 2):data.n_jobs - 1])
-        else:
-            imaginary_matrix[j][0] = np.sum(data.t_matrix[j][0:int(data.n_jobs / 2)])
-            imaginary_matrix[j][1] = np.sum(data.t_matrix[j][int(data.n_jobs / 2) + 1:data.n_jobs - 1])
-    imaginary_data = SchedulingData(name="dummy", n_jobs=data.n_jobs, n_machines=2, t_matrix=imaginary_matrix)
+        for m in range(0, data.n_machines, 1):
+            if m < center:
+                imaginary_matrix[j][0] = imaginary_matrix[j][0] + data.t_matrix[j][m]
+            else:
+                imaginary_matrix[j][1] = imaginary_matrix[j][1] + data.t_matrix[j][m]
+    imaginary_data = SchedulingData(name="imaginary_tmp", n_jobs=data.n_jobs, n_machines=2, t_matrix=imaginary_matrix)
     johnson_rule_2(imaginary_data)
     data.schedule = imaginary_data.schedule
 
@@ -172,9 +180,7 @@ dummy = read_data_file("neh.data.txt", 1)[0]
 if verify_dataset(dummy):
     naive(dummy)
     print(makespan(dummy))
-    gantt_chart(dummy)
     johnson_rule_multiple(dummy)
     print(makespan(dummy))
-    gantt_chart(dummy)
 else:
     print("Dataset is not in correct format!")
