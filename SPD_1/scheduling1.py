@@ -34,7 +34,7 @@ class SchedulingData:
 
 
 def custom_dataset(n_jobs: int, n_machines: int, name: str = "custom_dataset"):
-    t_matrix = np.random.randint(n_jobs, n_machines)
+    t_matrix = np.random.randint(low=1, high=100, size=(n_jobs, n_machines))
     return SchedulingData(name=name, n_jobs=n_jobs, n_machines=n_machines, t_matrix=t_matrix)
 
 
