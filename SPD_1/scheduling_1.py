@@ -144,9 +144,9 @@ def johnson_rule_multiple(data: SchedulingData) -> int:
     imaginary_matrix = np.zeros((data.n_jobs, 2))
     if data.n_machines % 2 == 0:
         for j in range(0, data.n_jobs, 1):
-            for m in range(0, center, 1):
+            for m in range(0, center + 1, 1):
                 imaginary_matrix[j][0] = imaginary_matrix[j][0] + data.t_matrix[j][m]
-            for m in range(center, data.n_machines, 1):
+            for m in range(center + 1, data.n_machines, 1):
                 imaginary_matrix[j][1] = imaginary_matrix[j][1] + data.t_matrix[j][m]
     else:
         for j in range(0, data.n_jobs, 1):
