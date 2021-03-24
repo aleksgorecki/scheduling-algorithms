@@ -3,7 +3,7 @@ import scheduling_1
 
 set_index = 0
 data_dir = "data/"
-default_data_file = ""
+default_data_file = "data002v.txt"
 
 
 ans = True
@@ -12,7 +12,7 @@ while ans:
         file_name = "data/" + str(input("Enter name of the data file: "))
     else:
         file_name = data_dir + default_data_file
-    dummy = scheduling_1.read_data_file(file_name, set_index+1)[set_index]
+    dummy = scheduling_1.read_data_file(file_name, set_index+1, no_names=True)[set_index]
     print("""
     0.Exit/Quit
     1.Bruteforce
