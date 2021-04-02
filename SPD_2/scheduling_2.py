@@ -207,7 +207,7 @@ def neh(data: SchedulingData) -> int:
     priority = np.sum(a=data.t_matrix, axis=1, dtype=int)  # suma każdego wiersza (axis=1)
     sorted_jobs = np.argsort(a=-priority, kind="stable")  # sortowanie malejąco, bo minus i sortuje liczby ujemne
     schedule = np.array([], dtype=int)
-    best_schedule = sorted_jobs  # inicjalizacja, "w razie czego", w sytuacji gdyby lista miała być pusta
+    best_schedule = np.array([], dtype=int)
     for position, job in enumerate(sorted_jobs):
         tmp_schedule = sorted_jobs.copy()[0:position + 1]
         makespans = []
@@ -218,7 +218,65 @@ def neh(data: SchedulingData) -> int:
                                            t_matrix=data.t_matrix, schedule=tmp_schedule))
             makespans.append(cmax)
             schedules.append(tmp_schedule)
-        best_schedule = schedules[np.argmin(makespans)]
+        best_schedule = schedules[np.argmin(makespans)]  # zgodnie z dokumentacją argmin zwróci pierwsze wystąpienie
         schedule = best_schedule
+    best_schedule = best_schedule.tolist()
+    data.schedule = best_schedule
+    return makespan(data)
+
+
+#  Byc moze zastapi listy w funkcji od sciezki krytycznej
+class PathNode:
+    job: int
+    machine: int
+
+
+# Zwraca liste par indeksow wezlow sciezki krytycznej, indeksy odnoszą się do schedule, a nie macierzy z czasem operacji
+def critical_path(data: SchedulingData) -> list:
+    makespan_matrix = makespan(data, return_value_picker="matrix")
+    job, machine = 0, 0
+    steps = data.n_machines - 1 + data.n_jobs - 1  # kroki, odleglosc do pokonania w grafie (macierzy)
+    path = [[job, machine]]
+    for step in range(0, steps, 1):
+        if machine == data.n_machines-1:
+            job = job + 1
+        elif makespan_matrix[job + 1][machine] > makespan_matrix[job][machine + 1]:
+            job = job + 1
+        else:
+            machine = machine + 1
+        path.append([job, machine])
+    return path
+
+
+# Zadanie zawierające najdłuższą operację na ścieżce krytycznej
+def neh1(data: SchedulingData) -> int:
+    priority = np.sum(a=data.t_matrix, axis=1, dtype=int)  # suma każdego wiersza (axis=1)
+    sorted_jobs = np.argsort(a=-priority, kind="stable")  # sortowanie malejąco, bo minus i sortuje liczby ujemne
+    schedule = np.array([], dtype=int)
+    best_schedule = np.array([], dtype=int)
+    for position, job in enumerate(sorted_jobs):
+        tmp_schedule = sorted_jobs.copy()[0:position + 1]
+        makespans = []
+        schedules = []
+        for k in range(0, position + 1, 1):
+            tmp_schedule = np.insert(arr=schedule, obj=k, values=job)
+            cmax = makespan(SchedulingData(name="tmp", n_jobs=position+1, n_machines=data.n_machines,
+                                           t_matrix=data.t_matrix, schedule=tmp_schedule))
+            makespans.append(cmax)
+            schedules.append(tmp_schedule)
+        best_schedule = schedules[np.argmin(makespans)]  # zgodnie z dokumentacją argmin zwróci pierwsze wystąpienie
+        schedule = best_schedule
+        #####
+        # w tym miejscu wybór zadania x, które nie może być zadaniem równym job
+        #####
+        for x in range(0, position + 1, 1):
+            tmp_schedule = np.insert(arr=schedule, obj=x, values=job)
+            cmax = makespan(SchedulingData(name="tmp", n_jobs=position+1, n_machines=data.n_machines,
+                                           t_matrix=data.t_matrix, schedule=tmp_schedule))
+            makespans.append(cmax)
+            schedules.append(tmp_schedule)
+        best_schedule = schedules[np.argmin(makespans)]  # zgodnie z dokumentacją argmin zwróci pierwsze wystąpienie
+        schedule = best_schedule
+    best_schedule = best_schedule.tolist()
     data.schedule = best_schedule
     return makespan(data)
