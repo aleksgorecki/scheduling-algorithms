@@ -48,11 +48,20 @@ while ans:
             print("Dataset is not in correct format!")
     elif ans == 4:
         if scheduling_2.verify_dataset(dummy):
-            print("Cmax: ", scheduling_2.neh(dummy))
-            print(scheduling_2.critical_path(dummy))
+            print("Cmax0: ", scheduling_2.neh(dummy))
             print(dummy.schedule)
-            scheduling_2.gantt_chart(dummy)
+            #scheduling_2.gantt_chart(dummy)
+            print("Cmax1: ", scheduling_2.neh1(dummy))
+            print(dummy.schedule)
+            #scheduling_2.gantt_chart(dummy)
+            print("Cmax2: ", scheduling_2.neh2(dummy))
+            print(dummy.schedule)
+            #scheduling_2.gantt_chart(dummy)
+            print("Cmax3: ", scheduling_2.neh3(dummy))
+            print(dummy.schedule)
+            #scheduling_2.gantt_chart(dummy)
         else:
             print("Dataset is not in correct format!")
     else:
         print("\n Not valid choice try again")
+    ans = False
