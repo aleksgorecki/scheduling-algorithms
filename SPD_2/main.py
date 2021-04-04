@@ -1,8 +1,9 @@
 import scheduling_2
-import time
 import csv
+from timer import Timer
 
 
+t = Timer()
 set_index = 0
 data_dir = "data/"
 default_data_file = "neh.data.txt"
@@ -34,7 +35,10 @@ while ans:
             print("Dataset is not in correct format!")
     elif ans == 2:
         if scheduling_2.verify_dataset(dummy):
+            t.start()
             print("Cmax: ", scheduling_2.johnson_rule_multiple(dummy))
+            ctime=t.stop()
+            print(ctime)
             print(dummy.schedule)
             scheduling_2.gantt_chart(dummy)
         else:
