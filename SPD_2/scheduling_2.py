@@ -222,6 +222,23 @@ def neh(data: SchedulingData) -> int:
     data.schedule = best_schedule.tolist()
     return makespan(data)
 
+
+def neh_second_insertion_loop(data: SchedulingData, job_position: int) -> list:
+    x_job = data.schedule[job_position]
+    makespans, schedules = [], []
+    data.schedule = np.delete(data.schedule, job_position)
+    data.schedule = np.delete(data.schedule, job_position)
+    for x in range(0, job_position + 1, 1):
+        tmp_schedule = np.insert(arr=data.schedule, obj=x, values=x_job)
+        cmax = makespan(SchedulingData(name="tmp", n_jobs=data.n_jobs, n_machines=data.n_machines,
+                                       t_matrix=data.t_matrix, schedule=tmp_schedule))
+        makespans.append(cmax)
+        schedules.append(tmp_schedule)
+    best_schedule = schedules[np.argmin(makespans)]  # zgodnie z dokumentacją argmin zwróci pierwsze wystąpienie
+    return best_schedule.tolist()
+
+
+
 # Reprezentacja ścieżki krytycznej w postaci listy par zadanie-maszyna
 def critical_path(data: SchedulingData) -> list:
     makespan_matrix = makespan(data, return_value_picker="matrix")
@@ -292,7 +309,7 @@ def neh1(data: SchedulingData) -> int:
         schedule = np.delete(schedule, x_position)
         for x in range(0, x_position + 1, 1):
             tmp_schedule = np.insert(arr=schedule, obj=x, values=x_job)
-            cmax = makespan(SchedulingData(name="tmp", n_jobs=x_position+1, n_machines=data.n_machines,
+            cmax = makespan(SchedulingData(name="tmp", n_jobs=position+1, n_machines=data.n_machines,
                                            t_matrix=data.t_matrix, schedule=tmp_schedule))
             makespans.append(cmax)
             schedules.append(tmp_schedule)
@@ -331,7 +348,7 @@ def neh2(data: SchedulingData) -> int:
         schedule = np.delete(schedule, x_position)
         for x in range(0, x_position + 1, 1):
             tmp_schedule = np.insert(arr=schedule, obj=x, values=x_job)
-            cmax = makespan(SchedulingData(name="tmp", n_jobs=x_position+1, n_machines=data.n_machines,
+            cmax = makespan(SchedulingData(name="tmp", n_jobs=position+1, n_machines=data.n_machines,
                                            t_matrix=data.t_matrix, schedule=tmp_schedule))
             makespans.append(cmax)
             schedules.append(tmp_schedule)
@@ -370,7 +387,7 @@ def neh3(data: SchedulingData) -> int:
         schedule = np.delete(schedule, x_position)
         for x in range(0, x_position + 1, 1):
             tmp_schedule = np.insert(arr=schedule, obj=x, values=x_job)
-            cmax = makespan(SchedulingData(name="tmp", n_jobs=x_position+1, n_machines=data.n_machines,
+            cmax = makespan(SchedulingData(name="tmp", n_jobs=position+1, n_machines=data.n_machines,
                                            t_matrix=data.t_matrix, schedule=tmp_schedule))
             makespans.append(cmax)
             schedules.append(tmp_schedule)

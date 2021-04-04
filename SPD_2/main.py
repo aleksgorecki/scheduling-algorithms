@@ -1,5 +1,5 @@
 import scheduling_2
-import timeit
+import time
 import csv
 
 
