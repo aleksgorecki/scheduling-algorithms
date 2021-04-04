@@ -165,7 +165,7 @@ def bruteforce(data: SchedulingData) -> int:
     makespan_list = []
     for schedule in brute_schedules:
         makespan_list.append(makespan(SchedulingData(name="tmp", n_jobs=data.n_jobs, n_machines=data.n_machines,
-                                                t_matrix=data.t_matrix, schedule=schedule)))
+                                                     t_matrix=data.t_matrix, schedule=schedule)))
     min_makespan_index = np.argmin(np.array(makespan_list))
     data.schedule = brute_schedules[min_makespan_index]
     return makespan_list[min_makespan_index]
@@ -201,3 +201,25 @@ def gantt_chart(data: SchedulingData):
                        horizontalalignment="center",
                        verticalalignment="center")  # indeks zadań na blokach odpowiadających zadaniom
     plt.show()
+
+
+def neh(data: SchedulingData) -> int:
+    priority = np.sum(a=data.t_matrix, axis=1, dtype=int)  # suma każdego wiersza (axis=1)
+    sorted_jobs = np.argsort(a=-priority, kind="stable")  # sortowanie malejąco, bo minus i sortuje liczby ujemne
+    schedule = np.array([], dtype=int)
+    best_schedule = sorted_jobs  # inicjalizacja, "w razie czego", w sytuacji gdyby lista miała być pusta
+    for position, job in enumerate(sorted_jobs):
+        tmp_schedule = sorted_jobs.copy()[0:position + 1]
+        makespans = []
+        schedules = []
+        for p in range(0, position+1, 1):
+            tmp_schedule = np.insert(arr=schedule, obj=p, values=job)
+            cmax = makespan(SchedulingData(name="tmp", n_jobs=position+1, n_machines=data.n_machines,
+                                           t_matrix=data.t_matrix, schedule=tmp_schedule))
+            makespans.append(cmax)
+            schedules.append(tmp_schedule)
+        best_schedule = schedules[np.argmin(makespans)]
+        schedule = best_schedule
+    data.schedule = best_schedule
+    return makespan(data)
+
