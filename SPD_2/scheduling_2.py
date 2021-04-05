@@ -395,3 +395,53 @@ def neh3(data: SchedulingData) -> int:
         schedule = best_schedule
     data.schedule = best_schedule.tolist()
     return makespan(data)
+
+#Zadanie, ktorego usuniecie spowoduje najwieksze zmniejszenie wartosci Cmax
+def neh4(data: SchedulingData) -> int:
+    priority = np.sum(a=data.t_matrix, axis=1, dtype=int)  # suma każdego wiersza (axis=1)
+    sorted_jobs = np.argsort(a=-priority, kind="stable")  # sortowanie malejąco, bo minus i sortuje liczby ujemne
+    schedule = np.array([], dtype=int)
+    best_schedule = sorted_jobs  # inicjalizacja, "w razie czego", w sytuacji gdyby lista miała być pusta
+    for position, job in enumerate(sorted_jobs):
+        tmp_schedule = sorted_jobs.copy()[0:position + 1]
+        makespans = []
+        schedules = []
+        for p in range(0, position+1, 1):
+            tmp_schedule = np.insert(arr=schedule, obj=p, values=job)
+            cmax = makespan(SchedulingData(name="tmp", n_jobs=position+1, n_machines=data.n_machines,
+                                           t_matrix=data.t_matrix, schedule=tmp_schedule))
+            makespans.append(cmax)
+            schedules.append(tmp_schedule)
+        best_schedule = schedules[np.argmin(makespans)]
+        schedule = best_schedule
+        #################################
+        makespans = []
+        removed = []
+        for p in range(0, position+1, 1):
+            tmp_xschedule = best_schedule
+            smaller_tmp = tmp_xschedule
+            current_job = sorted_jobs[position]
+            if tmp_xschedule[p] == current_job: #pominiecie operacji dla zadania dla ktorego wlasnie znalezlismy uszeregowanie
+                continue
+            tmp_diff = smaller_tmp[p]
+            smaller_tmp = smaller_tmp[~np.isin(tmp_xschedule, tmp_diff)] #tmp pomniejszone o zadanie dla ktorego bedziemy liczyc Cmax
+            cmax = makespan(SchedulingData(name="tmp", n_jobs=position, n_machines=data.n_machines,
+                                           t_matrix=data.t_matrix, schedule=smaller_tmp))
+            makespans.append(cmax)
+            removed.append(tmp_xschedule[p])
+        if position==0: #pominiecie reszty petli dla pierwszej iteracji
+            continue
+        x_job = removed[np.argmin(makespans)]
+        x_position = list(best_schedule).index(x_job)
+        #################################
+        for x in range(0, x_position + 1, 1):
+            tmp_schedule = np.insert(arr=schedule, obj=x, values=x_job)
+            cmax = makespan(SchedulingData(name="tmp", n_jobs=position+1, n_machines=data.n_machines,
+                                           t_matrix=data.t_matrix, schedule=tmp_schedule))
+            makespans.append(cmax)
+            schedules.append(tmp_schedule)
+        best_schedule = schedules[np.argmin(makespans)]  # zgodnie z dokumentacją argmin zwróci pierwsze wystąpienie
+        schedule = best_schedule
+
+    data.schedule = best_schedule
+    return makespan(data)
