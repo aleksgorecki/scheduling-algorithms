@@ -10,7 +10,8 @@ data_dir = "data/"
 default_data_file = "neh.data.txt"
 fieldnames = ['name', 'johnson_c', 'johnson_t', 'neh_c', 'neh_t', 'neh1_c', 'neh1_t', 'neh2_c', 'neh2_t', 'neh3_c', 'neh3_t', 'neh4_c', 'neh4_t']
 dataList = []
-setname = 'zastaw0'
+
+setname = 'set' + str(set_index)
 set = Dict(setname)
 dataList.append(set)
 

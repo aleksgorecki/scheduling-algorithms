@@ -415,25 +415,27 @@ def neh4(data: SchedulingData) -> int:
         best_schedule = schedules[np.argmin(makespans)]
         schedule = best_schedule
         #################################
-        makespans = []
+        makespans_x = []
         removed = []
         for p in range(0, position+1, 1):
-            tmp_xschedule = best_schedule
-            smaller_tmp = tmp_xschedule
+            tmp_schedule_x = best_schedule
+            smaller_tmp = tmp_schedule_x
             current_job = sorted_jobs[position]
-            if tmp_xschedule[p] == current_job: #pominiecie operacji dla zadania dla ktorego wlasnie znalezlismy uszeregowanie
+            if tmp_schedule_x[p] == current_job: #pominiecie operacji dla zadania dla ktorego wlasnie znalezlismy uszeregowanie
                 continue
             tmp_diff = smaller_tmp[p]
-            smaller_tmp = smaller_tmp[~np.isin(tmp_xschedule, tmp_diff)] #tmp pomniejszone o zadanie dla ktorego bedziemy liczyc Cmax
+            smaller_tmp = smaller_tmp[~np.isin(tmp_schedule_x, tmp_diff)] #tmp pomniejszone o zadanie dla ktorego bedziemy liczyc Cmax
             cmax = makespan(SchedulingData(name="tmp", n_jobs=position, n_machines=data.n_machines,
                                            t_matrix=data.t_matrix, schedule=smaller_tmp))
-            makespans.append(cmax)
-            removed.append(tmp_xschedule[p])
+            makespans_x.append(cmax)
+            removed.append(tmp_schedule_x[p])
         if position==0: #pominiecie reszty petli dla pierwszej iteracji
             continue
-        x_job = removed[np.argmin(makespans)]
+        x_job = removed[np.argmin(makespans_x)]
         x_position = list(best_schedule).index(x_job)
         #################################
+        makespans, schedules = [], []
+        schedule = np.delete(schedule, x_position)
         for x in range(0, x_position + 1, 1):
             tmp_schedule = np.insert(arr=schedule, obj=x, values=x_job)
             cmax = makespan(SchedulingData(name="tmp", n_jobs=position+1, n_machines=data.n_machines,
