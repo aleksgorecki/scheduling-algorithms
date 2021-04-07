@@ -1,22 +1,23 @@
 class Dict:
-    set: dict = {
-        'name' : '',
-        'johnson_c' : 0,
-        'johnson_t' : 0,
-        'neh_c' : 0,
-        'neh_t' : 0,
-        'neh1_c' : 0,
-        'neh1_t' : 0,
-        'neh2_c' : 0,
-        'neh2_t' : 0,
-        'neh3_c' : 0,
-        'neh3_t' : 0,
-        'neh4_c' : 0,
-        'neh4_t' : 0
-    }
+
 
     def __init__(self, name: str):
-        self.set['name'] = name
+        self.set = {
+            'name': name,
+            'johnson_c': 0,
+            'johnson_t': 0,
+            'neh_c': 0,
+            'neh_t': 0,
+            'neh1_c': 0,
+            'neh1_t': 0,
+            'neh2_c': 0,
+            'neh2_t': 0,
+            'neh3_c': 0,
+            'neh3_t': 0,
+            'neh4_c': 0,
+            'neh4_t': 0
+        }
+        #self.set['name'] = name
 
     def getname(self):
         return self.set['name']

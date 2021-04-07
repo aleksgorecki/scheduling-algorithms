@@ -32,6 +32,9 @@ class SchedulingData:
     def __repr__(self):
         return str(self)
 
+    def getname(self) -> str:
+        return self.name
+
 
 def custom_dataset(n_jobs: int, n_machines: int, name: str = "custom_dataset"):
     t_matrix = np.random.randint(low=1, high=100, size=(n_jobs, n_machines))
