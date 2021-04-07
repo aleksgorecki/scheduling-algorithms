@@ -148,7 +148,7 @@ while menu:
                     cmaxn2 = scheduling_2.neh2(dummy)
                     ctimen2 = t.stop()
                     print("Cmax2: ", cmaxn2)
-                    print("Time2: ", ctimen3)
+                    print("Time2: ", ctimen2)
                     print(dummy.schedule)
                     # scheduling_2.gantt_chart(dummy)
                     t.start()
@@ -166,7 +166,7 @@ while menu:
                     print(dummy.schedule)
                     dataList2[0].setNeh(cmaxn, ctimen, cmaxn1, ctimen1, cmaxn2, ctimen2, cmaxn3, ctimen3, cmaxn4,
                                        ctimen4)
-                    print(dataList2[0].getdict())
+                    #print(dataList2[0].getdict())
                 else:
                     print("Dataset is not in correct format!")
 
