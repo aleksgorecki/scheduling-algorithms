@@ -109,6 +109,27 @@ def generate_neighbour(schedule: list, lower_index: int, upper_index: int, metho
     return neighbour
 
 
+def neighbour_swap(schedule: list, lower_index: int, upper_index: int) -> list:
+    neighbour = schedule
+    temp = neighbour[upper_index]
+    neighbour[upper_index] = neighbour[lower_index]
+    neighbour[lower_index] = temp
+    return schedule
+
+
+def neighbour_insert(schedule: list, lower_index: int, upper_index: int) -> list:
+    neighbour = schedule
+    lower = neighbour.pop(lower_index)
+    neighbour.insert(upper_index - 1, lower)
+    return neighbour
+
+
+def neighbour_inverse(schedule: list, lower_index: int, upper_index: int) -> list:
+    neighbour = schedule
+    neighbour[lower_index:upper_index] = neighbour[lower_index:upper_index][::-1]
+    return neighbour
+
+
 def generate_n_neighbours(schedule: list, n_neighbours: int, method: str):
     possible_indices = list(range(0, len(schedule), 1))
     indices_combinations = list(combinations(possible_indices, 2))
@@ -135,21 +156,38 @@ def generate_n_neighbours(schedule: list, n_neighbours: int, method: str):
 
 
 def generate_viable_neighbours(schedule: list, max_neighbours: int, method: str, tabu: deque):
-    possible_indices = list(range(0, len(schedule), 1))
-    indices_combinations = list(combinations(possible_indices, 2))
-    random.shuffle(indices_combinations)
-    if max_neighbours > len(indices_combinations) or max_neighbours < 0:
-        max_neighbours = len(indices_combinations)
+    # possible_indices = list(range(0, len(schedule), 1))
+    # indices_combinations = list(combinations(possible_indices, 2))
+    # random.shuffle(indices_combinations)
+    # if max_neighbours > len(indices_combinations) or max_neighbours < 0:
+    #     max_neighbours = len(indices_combinations)
+    # neighbours = []
+    # for i, indices in enumerate(indices_combinations):
+    #     sorted_indices = sorted(indices)
+    #     lower_index = sorted_indices[0]
+    #     upper_index = sorted_indices[1]
+    #     neighbour = generate_neighbour(schedule, lower_index, upper_index, method)
+    #     if len(neighbours) >= max_neighbours:
+    #         break
+    #     if neighbour not in tabu:
+    #         neighbours.append(neighbour)
     neighbours = []
-    for i, indices in enumerate(indices_combinations):
-        sorted_indices = sorted(indices)
-        lower_index = sorted_indices[0]
-        upper_index = sorted_indices[1]
+    for i in range(0, max_neighbours, 1):
+        lower_index = random.randint(0, len(schedule)-2)
+        upper_index = random.randint(lower_index, len(schedule)-1)
         neighbour = generate_neighbour(schedule, lower_index, upper_index, method)
-        if len(neighbours) >= max_neighbours:
-            break
         if neighbour not in tabu:
             neighbours.append(neighbour)
+    return neighbours
+
+
+def generate_all_neighbours(schedule: list, method: str, tabu: deque):
+    neighbours = []
+    for lower in range(0, len(schedule), 1):
+        for upper in range(lower+1, len(schedule), 1):
+            neighbour = generate_neighbour(schedule, lower, upper, method)
+            if neighbour not in tabu:
+                neighbours.append(neighbour)
     return neighbours
 
 
@@ -160,6 +198,18 @@ def find_best_neighbour(data: SchedulingData, schedules: list, tabu) -> list:
         current_cmax = makespan(SchedulingData(name="tmp", n_jobs=data.n_jobs, n_machines=data.n_machines,
                                                t_matrix=data.t_matrix, schedule=schedule))
         if current_cmax < lowest_cmax and schedule not in tabu:
+            lowest_cmax = current_cmax
+            best_schedule = schedule
+    return best_schedule
+
+
+def find_best(data: SchedulingData, schedules: list) -> list:
+    best_schedule = schedules[0]
+    lowest_cmax = math.inf
+    for schedule in schedules:
+        current_cmax = makespan(SchedulingData(name="tmp", n_jobs=data.n_jobs, n_machines=data.n_machines,
+                                               t_matrix=data.t_matrix, schedule=schedule))
+        if current_cmax < lowest_cmax:
             lowest_cmax = current_cmax
             best_schedule = schedule
     return best_schedule
@@ -184,30 +234,26 @@ def tabu_search(data: SchedulingData,
                 init_scheduling_func=johnson_rule_multiple,
                 stopping_condition: StoppingCondition = IterationsCondition(50)) -> int:
     tabu = deque(maxlen=tabu_len)
-    makespans = []
-    schedules = []
     data_copy = SchedulingData(name="copy", n_jobs=data.n_jobs, n_machines=data.n_machines, t_matrix=data.t_matrix)
     init_scheduling_func(data)
-    current_schedule = data.schedule
-    best_schedule = current_schedule
+    candidate = data.schedule
+    best_schedule = data.schedule
     lowest_cmax = makespan(SchedulingData(name="tmp", n_jobs=data.n_jobs, n_machines=data.n_machines,
                                           t_matrix=data.t_matrix, schedule=best_schedule))
+    tabu.append(best_schedule)
     while True:
-        neighbours = generate_n_neighbours(data.schedule, n_neighbours=n_neighbours, method=neighbour_method)
-        neighbour = find_best_neighbour(data, neighbours, tabu)
-        current_schedule = neighbour
-        tabu.append(current_schedule)
-        current_cmax = makespan(SchedulingData(name="tmp", n_jobs=data.n_jobs, n_machines=data.n_machines,
-                                               t_matrix=data.t_matrix, schedule=current_schedule))
-
-
-        makespans.append(current_cmax)
-        schedules.append(current_schedule)
-
-
-        if current_cmax < lowest_cmax:
-            lowest_cmax = current_cmax
-            best_schedule = current_schedule
+        neighbours = generate_all_neighbours(candidate, neighbour_method, tabu)
+        if len(neighbours) == 0:
+            print("koniec sasiedztwa")
+            data.schedule = best_schedule
+            return makespan(data)
+            break
+        candidate = find_best(data_copy, neighbours)
+        candidate_cmax = makespan(SchedulingData("tmp", data.n_jobs, data.n_machines, data.t_matrix, candidate))
+        tabu.append(candidate)
+        if candidate_cmax < lowest_cmax:
+            lowest_cmax = candidate_cmax
+            best_schedule = candidate
         else:
             if type(stopping_condition) == UselessIterationsCondition:
                 stopping_condition.update()
@@ -216,4 +262,3 @@ def tabu_search(data: SchedulingData,
         if stopping_condition.check():
             data.schedule = best_schedule
             return makespan(data)
-        current_schedule = best_schedule

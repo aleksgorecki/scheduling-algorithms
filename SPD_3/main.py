@@ -5,15 +5,15 @@ import timer
 data_dir = "data/"
 #default_data_file = "data002v.txt"
 default_data_file = "neh.data.txt"
-dataset_index = 0
+dataset_index = 20
 
 data = read_data_file(data_dir+default_data_file, dataset_index+1, no_names=False)[dataset_index]
 
 
-method = "swap"
+method = "inverse"
 tabu_len = 10
-n_neighbours = 100
-cond = IterationsCondition(100)
+n_neighbours = 50
+cond = IterationsCondition(1000)
 
 t = timer.Timer()
 
@@ -30,9 +30,9 @@ print(t.stop())
 print("tabu search: ")
 t.start()
 print(tabu_search(data,
-                  init_scheduling_func=neh,
+                  init_scheduling_func=johnson_rule_multiple,
                   neighbour_method="swap",
-                  tabu_len=4,
+                  tabu_len=15,
                   n_neighbours=100,
-                  stopping_condition=IterationsCondition(120)))
+                  stopping_condition=IterationsCondition(50)))
 print(t.stop())
