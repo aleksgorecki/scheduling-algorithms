@@ -22,7 +22,7 @@ class AlgorithmCall:
 
 
 class Statistics:
-    stat_dictionary = dict
+    stat_dictionary = {}
 
 
 tabu_search_options = ()
@@ -32,8 +32,8 @@ calls = [AlgorithmCall(johnson_rule_multiple), AlgorithmCall(neh)]
 time_stats = Statistics()
 cmax_stats = Statistics()
 for dataset in datasets:
-    cmax_inner_dictionary = dict()
-    time_inner_dictionary = dict()
+    cmax_inner_dictionary = {}
+    time_inner_dictionary = {}
     for call in calls:
         timer.start()
         if call.additional_parameters is None:
@@ -47,9 +47,7 @@ for dataset in datasets:
     cmax_stats.stat_dictionary.update({dataset.name: cmax_inner_dictionary})
     time_stats.stat_dictionary.update({dataset.name: time_inner_dictionary})
 
-for dataset in datasets:
-    for call in calls:
-        print(cmax_stats.stat_dictionary[dataset.name][call.func.__name__])
+
 # data = read_data_file(default_data_file, 21, no_names=False)[20]
 # timer.start()
 # print(tabu_search(data,
