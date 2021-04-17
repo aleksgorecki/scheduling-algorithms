@@ -5,8 +5,8 @@ import timer
 
 default_data_file = "data/neh.data.txt"
 csv_filename = "algorytmy.csv"
-max_dataset_index = 2
-excel_lang = "pl" #"eng"
+max_dataset_index = 20
+excel_lang = "pl"  # "eng"
 
 
 datasets = read_data_file(default_data_file, max_dataset_index+1, no_names=False)
@@ -55,7 +55,7 @@ else:
 csv_handle = csv.writer(csv_file, dialect="excel", delimiter=delimiter, quotechar='"', quoting=csv.QUOTE_MINIMAL)
 
 header_row = list(cmax_stats[datasets[0].name].keys())
-header_row.insert(0, "dataset name:")
+header_row.insert(0, "dataset name")
 csv_handle.writerow(header_row)
 for dataset in datasets:
     row = [dataset.name]
