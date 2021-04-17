@@ -21,16 +21,13 @@ class AlgorithmCall:
             self.additional_parameters = params
 
 
-class Statistics:
-    stat_dictionary = {}
-
-
 tabu_search_options = ()
 timer = timer.Timer()
 csv_handle = csv.writer(csv_file, dialect="excel")
 calls = [AlgorithmCall(johnson_rule_multiple), AlgorithmCall(neh)]
-time_stats = Statistics()
-cmax_stats = Statistics()
+time_stats = {}
+cmax_stats = {}
+print(cmax_stats)
 for dataset in datasets:
     cmax_inner_dictionary = {}
     time_inner_dictionary = {}
@@ -44,10 +41,15 @@ for dataset in datasets:
         algorithm_name = call.func.__name__
         cmax_inner_dictionary.update({call.func.__name__: cmax})
         time_inner_dictionary.update({call.func.__name__: execution_time})
-    cmax_stats.stat_dictionary.update({dataset.name: cmax_inner_dictionary})
-    time_stats.stat_dictionary.update({dataset.name: time_inner_dictionary})
+    cmax_stats.update({dataset.name: cmax_inner_dictionary})
+    time_stats.update({dataset.name: time_inner_dictionary})
 
 
+for dataset in datasets:
+    print([str(x) for x in cmax_stats[dataset.name].values()])
+for dataset in datasets:
+    print([str(x) for x in time_stats[dataset.name].values()])
+    #csv_handle.writerow(dataset.name, [str(x) for x in cmax_stats.stat_dictionary[dataset.name].items() ])
 # data = read_data_file(default_data_file, 21, no_names=False)[20]
 # timer.start()
 # print(tabu_search(data,
