@@ -27,7 +27,8 @@ csv_handle = csv.writer(csv_file, dialect="excel")
 calls = [AlgorithmCall(johnson_rule_multiple), AlgorithmCall(neh)]
 time_stats = {}
 cmax_stats = {}
-print(cmax_stats)
+for dataset in datasets:
+    dataset.name.replace("\n", "")
 for dataset in datasets:
     cmax_inner_dictionary = {}
     time_inner_dictionary = {}
@@ -45,11 +46,14 @@ for dataset in datasets:
     time_stats.update({dataset.name: time_inner_dictionary})
 
 
+
+
 for dataset in datasets:
-    print([str(x) for x in cmax_stats[dataset.name].values()])
-for dataset in datasets:
-    print([str(x) for x in time_stats[dataset.name].values()])
-    #csv_handle.writerow(dataset.name, [str(x) for x in cmax_stats.stat_dictionary[dataset.name].items() ])
+    row = ""
+    csv_handle.writerow([dataset.name, cmax_stats[dataset.name].items()])
+
+csv_file.close()
+
 # data = read_data_file(default_data_file, 21, no_names=False)[20]
 # timer.start()
 # print(tabu_search(data,
