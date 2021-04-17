@@ -5,8 +5,9 @@ import timer
 
 default_data_file = "data/neh.data.txt"
 csv_filename = "algorytmy.csv"
-csv_file = open(csv_filename, mode="w")
 max_dataset_index = 2
+excel_lang = "pl" #"eng"
+
 
 datasets = read_data_file(default_data_file, max_dataset_index+1, no_names=False)
 
@@ -23,12 +24,12 @@ class AlgorithmCall:
 
 tabu_search_options = ()
 timer = timer.Timer()
-csv_handle = csv.writer(csv_file, dialect="excel")
+
 calls = [AlgorithmCall(johnson_rule_multiple), AlgorithmCall(neh)]
 time_stats = {}
 cmax_stats = {}
 for dataset in datasets:
-    dataset.name.replace("\n", "")
+    dataset.name = dataset.name.replace(":\n", "")
 for dataset in datasets:
     cmax_inner_dictionary = {}
     time_inner_dictionary = {}
@@ -46,12 +47,21 @@ for dataset in datasets:
     time_stats.update({dataset.name: time_inner_dictionary})
 
 
+csv_file = open(csv_filename, mode="w")
+if excel_lang == "pl":
+    delimiter = ";"
+else:
+    delimiter = ","
+csv_handle = csv.writer(csv_file, dialect="excel", delimiter=delimiter, quotechar='"', quoting=csv.QUOTE_MINIMAL)
 
-
+header_row = list(cmax_stats[datasets[0].name].keys())
+header_row.insert(0, "dataset name:")
+csv_handle.writerow(header_row)
 for dataset in datasets:
-    row = ""
-    csv_handle.writerow([dataset.name, cmax_stats[dataset.name].items()])
-
+    row = [dataset.name]
+    for value in cmax_stats[dataset.name].values():
+        row.append(value)
+    csv_handle.writerow(row)
 csv_file.close()
 
 # data = read_data_file(default_data_file, 21, no_names=False)[20]
