@@ -210,15 +210,10 @@ def tabu_search(data: SchedulingData,
     lowest_cmax = makespan(SchedulingData(name="tmp", n_jobs=data.n_jobs, n_machines=data.n_machines,
                                           t_matrix=data.t_matrix, schedule=best_schedule))
     tabu.append(best_schedule)
-    makespans = []
-    schedules = []
     while True:
-        #neighbours = generate_all_neighbours(candidate, neighbour_method, tabu)
         neighbours = generate_n_neighbours(candidate, n_neighbours, neighbour_method)
         candidate = find_best(data_copy, neighbours)
         candidate_cmax = makespan(SchedulingData("tmp", data.n_jobs, data.n_machines, data.t_matrix, candidate))
-        makespans.append(candidate_cmax)
-        schedules.append(candidate)
         tabu.append(candidate)
         if candidate_cmax < lowest_cmax:
             lowest_cmax = candidate_cmax
@@ -265,7 +260,11 @@ def get_next_candidate(data: SchedulingData, schedule: list, tabu: deque, method
     return best_neighbour
 
 
-def tabu_search_express(data: SchedulingData, tabu_len: int, condition: StoppingCondition, method, init_scheduling):
+def tabu_search_all(data: SchedulingData,
+                    tabu_len: int = 10,
+                    method = NeighbourMoves.swap,
+                    init_scheduling = neh,
+                    condition: StoppingCondition = IterationsCondition(50)):
     tabu = deque(maxlen=tabu_len)
     data_copy = SchedulingData(name="copy", n_jobs=data.n_jobs, n_machines=data.n_machines, t_matrix=data.t_matrix)
     init_scheduling(data_copy)
