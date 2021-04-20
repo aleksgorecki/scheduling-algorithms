@@ -4,16 +4,31 @@ import timer
 
 
 default_data_file = "data/neh.data.txt"
-csv_filename = "algorytmy.csv"
+csv_filename = "tabu_len.csv"
 max_dataset_index = -2
 excel_lang = "pl"  # "eng"
-mode = 2  # 2
+mode = 1  # 2
 
 
 datasets = read_data_file(default_data_file, max_dataset_index+1, no_names=False)
 #datasets = datasets[0:len(datasets)-1]
-datasets = [datasets[20]]
-#datasets = datasets[0:20]
+#datasets = [datasets[20]]
+datasets = datasets[0:60]
+
+
+class TabuSearchParams:
+    def __init__(self, tabu_len: int = 10, neighbour_move = NeighbourMoves.swap,
+                 init_scheduling = johnson_rule_multiple, stopping_condition = IterationsCondition(50)):
+        self.tabu_len = tabu_len
+        self.neighbour_move = neighbour_move
+        self.init_scheduling = init_scheduling
+        self.stopping_condition = stopping_condition
+
+    def __str__(self):
+        return ";tabu" + str(self.tabu_len) + "_" + self.neighbour_move.__name__ + "_" +\
+               self.init_scheduling.__name__ + "_" + str(self.stopping_condition)
+    def __iter__(self):
+        return iter([self.tabu_len, self.neighbour_move, self.init_scheduling, self.stopping_condition])
 
 
 class AlgorithmCall:
@@ -34,13 +49,17 @@ if mode == 1:
     #   neighbour_method: str
     #   init_scheduling
     #   stopping_condition
-    calls = [AlgorithmCall(johnson_rule_multiple), AlgorithmCall(neh),
-             AlgorithmCall(tabu_search, [10, 10, "swap", johnson_rule_multiple, IterationsCondition(50)])]
+    calls = [
+             AlgorithmCall(tabu_search_all, TabuSearchParams(5, NeighbourMoves.swap, neh, IterationsCondition(100))),
+             AlgorithmCall(tabu_search_all, TabuSearchParams(10, NeighbourMoves.insert, neh, IterationsCondition(100))),
+             AlgorithmCall(tabu_search_all, TabuSearchParams(20, NeighbourMoves.inverse, neh, IterationsCondition(100))),
+             AlgorithmCall(tabu_search_all, TabuSearchParams(1000, NeighbourMoves.inverse, neh, IterationsCondition(100)))]
     time_stats = {}
     cmax_stats = {}
     for dataset in datasets:
         dataset.name = dataset.name.replace(":\n", "")
     for dataset in datasets:
+        print(dataset.name)
         cmax_inner_dictionary = {}
         time_inner_dictionary = {}
         for call in calls:
@@ -50,9 +69,12 @@ if mode == 1:
             else:
                 cmax = call.func(dataset, *call.additional_parameters)
             execution_time = timer.stop()
-            algorithm_name = call.func.__name__
-            cmax_inner_dictionary.update({call.func.__name__: cmax})
-            time_inner_dictionary.update({call.func.__name__: execution_time})
+            if call.additional_parameters is None:
+                algorithm_name = call.func.__name__
+            else:
+                algorithm_name = call.func.__name__ + str(call.additional_parameters)
+            cmax_inner_dictionary.update({algorithm_name: cmax})
+            time_inner_dictionary.update({algorithm_name: execution_time})
         cmax_stats.update({dataset.name: cmax_inner_dictionary})
         time_stats.update({dataset.name: time_inner_dictionary})
     csv_file = open(csv_filename, mode="w")
@@ -88,8 +110,7 @@ elif mode == 2:
     #   init_scheduling
     #   stopping_condition
     calls = [AlgorithmCall(johnson_rule_multiple), AlgorithmCall(neh),
-             AlgorithmCall(tabu_search, [1000, -1, "swap", neh, IterationsCondition(100)]),
-             AlgorithmCall(tabu_search_all, [1000, NeighbourMoves.swap, johnson_rule_multiple, IterationsCondition(100)])]
+             AlgorithmCall(tabu_search_all, TabuSearchParams(10, NeighbourMoves.swap, neh, IterationsCondition(10)))]
     timer = timer.Timer()
     for dataset in datasets:
         print(dataset.name)
@@ -100,7 +121,7 @@ elif mode == 2:
             else:
                 cmax = call.func(dataset, *call.additional_parameters)
             execution_time = timer.stop()
-            print("  ", call.func.__name__, ":")
+            print("  ", call.func.__name__, str(call.additional_parameters), ":", sep="")
             print("    cmax: ", cmax)
             print("    time: ", execution_time)
             if print_schedule:

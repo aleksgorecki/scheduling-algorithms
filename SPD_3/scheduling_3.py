@@ -41,6 +41,9 @@ class IterationsCondition(StoppingCondition):
         else:
             return False
 
+    def __str__(self):
+        return str(self.__class__.__name__ + "(" + str(self.max_iterations) + ")")
+
 
 class UselessIterationsCondition(StoppingCondition):
     max_useless_iterations: int
@@ -58,7 +61,10 @@ class UselessIterationsCondition(StoppingCondition):
         else:
             return False
 
+    def __str__(self):
+        return str(self.__class__.__name__ + "(" + str(self.max_useless_iterations) + ")")
 
+# niewykorzystane
 class UsefulIterationsCondition(StoppingCondition):
     max_useful_iterations: int
 
@@ -78,10 +84,12 @@ class UsefulIterationsCondition(StoppingCondition):
 
 class TimeCondition(StoppingCondition):
     finish_time: int
+    duration: int
 
     def __init__(self, finish_time):
         StoppingCondition.__init__(self)
         self.finish_time = time.time_ns() + finish_time*1e9
+        self.duration = finish_time
 
     def update(self):
         self.state.time_passed = time.time_ns()
@@ -91,6 +99,9 @@ class TimeCondition(StoppingCondition):
             return True
         else:
             return False
+
+    def __str__(self):
+        return str(self.__class__.__name__ + "(" + str(self.duration) + ")")
 
 
 def generate_neighbour(schedule: list, lower_index: int, upper_index: int, method: str = "swap") -> list:
@@ -273,6 +284,8 @@ def tabu_search_all(data: SchedulingData,
     lowest_cmax = makespan(SchedulingData("tmp", data.n_jobs, data.n_machines, data.t_matrix, best))
     while True:
         candidate = get_next_candidate(data_copy, candidate, tabu, method)
+        if len(candidate) == 0:
+            break
         tabu.append(candidate)
         candidate_cmax = makespan(SchedulingData("tmp", data.n_jobs, data.n_machines, data.t_matrix, candidate))
         if candidate_cmax < lowest_cmax:
@@ -281,5 +294,6 @@ def tabu_search_all(data: SchedulingData,
         if type(condition) == IterationsCondition:
             condition.update()
         if condition.check():
-            data.schedule = best
-            return makespan(data)
+            break
+        data.schedule = best
+        return makespan(data)
