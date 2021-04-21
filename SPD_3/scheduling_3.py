@@ -15,6 +15,7 @@ class StoppingCondition:
 
     state: StateVariables
 
+
     def __init__(self):
         self.state = self.StateVariables()
 
@@ -37,6 +38,7 @@ class IterationsCondition(StoppingCondition):
 
     def check(self) -> bool:
         if self.state.n_iterations >= self.max_iterations:
+            self.state.n_iterations = 0
             return True
         else:
             return False
@@ -57,6 +59,7 @@ class UselessIterationsCondition(StoppingCondition):
 
     def check(self) -> bool:
         if self.state.n_useless_iterations >= self.max_useless_iterations:
+            self.state.n_useless_iterations = 0
             return True
         else:
             return False
@@ -77,6 +80,7 @@ class UsefulIterationsCondition(StoppingCondition):
 
     def check(self) -> bool:
         if self.state.n_useful_iterations >= self.max_useful_iterations:
+            self.state.n_useful_iterations = 0
             return True
         else:
             return False
@@ -96,6 +100,7 @@ class TimeCondition(StoppingCondition):
 
     def check(self) -> bool:
         if self.state.time_passed >= self.finish_time:
+            self.state.time_passed = 0
             return True
         else:
             return False
@@ -291,7 +296,10 @@ def tabu_search_all(data: SchedulingData,
         if candidate_cmax < lowest_cmax:
             best = candidate
             lowest_cmax = candidate_cmax
-        if type(condition) == IterationsCondition:
+        else:
+            if type(condition) == UselessIterationsCondition:
+                condition.update()
+        if type(condition) == IterationsCondition or type(condition) == TimeCondition:
             condition.update()
         if condition.check():
             break

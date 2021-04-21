@@ -4,16 +4,16 @@ import timer
 
 
 default_data_file = "data/neh.data.txt"
-csv_filename = "iteracje.csv"
+csv_filename = "metody2.csv"
 max_dataset_index = -2
 excel_lang = "pl"  # "eng"
-mode = 2  # 2
+mode = 1  # 2
 
 
 datasets = read_data_file(default_data_file, max_dataset_index+1, no_names=False)
 #datasets = datasets[0:len(datasets)-1]
 #datasets = [datasets[20]]
-datasets = datasets[0:60]
+datasets = datasets[0:30]
 
 
 class TabuSearchParams:
@@ -50,10 +50,9 @@ if mode == 1:
     #   init_scheduling
     #   stopping_condition
     calls = [
-             AlgorithmCall(tabu_search_all, TabuSearchParams(10, NeighbourMoves.swap, neh, IterationsCondition(5))),
-             AlgorithmCall(tabu_search_all, TabuSearchParams(10, NeighbourMoves.swap, neh, IterationsCondition(10))),
              AlgorithmCall(tabu_search_all, TabuSearchParams(10, NeighbourMoves.swap, neh, IterationsCondition(50))),
-             AlgorithmCall(tabu_search_all, TabuSearchParams(10, NeighbourMoves.swap, neh, IterationsCondition(100)))
+             AlgorithmCall(tabu_search_all, TabuSearchParams(10, NeighbourMoves.insert, neh, IterationsCondition(50))),
+             AlgorithmCall(tabu_search_all, TabuSearchParams(10, NeighbourMoves.inverse, neh, IterationsCondition(50))),
             ]
     time_stats = {}
     cmax_stats = {}
@@ -110,8 +109,8 @@ elif mode == 2:
     #   neighbour_method: str
     #   init_scheduling
     #   stopping_condition
-    calls = [
-             AlgorithmCall(tabu_search_all, TabuSearchParams(10, NeighbourMoves.swap, neh, IterationsCondition(10)))]
+    calls = [AlgorithmCall(neh),
+             AlgorithmCall(tabu_search_all, TabuSearchParams(10, NeighbourMoves.swap, neh, IterationsCondition(100)))]
     timer = timer.Timer()
     for dataset in datasets:
         print(dataset.name)
