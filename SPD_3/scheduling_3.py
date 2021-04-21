@@ -295,5 +295,5 @@ def tabu_search_all(data: SchedulingData,
             condition.update()
         if condition.check():
             break
-        data.schedule = best
-        return makespan(data)
+    data.schedule = best
+    return makespan(data)

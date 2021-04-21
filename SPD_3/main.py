@@ -4,10 +4,10 @@ import timer
 
 
 default_data_file = "data/neh.data.txt"
-csv_filename = "tabu_len.csv"
+csv_filename = "iteracje.csv"
 max_dataset_index = -2
 excel_lang = "pl"  # "eng"
-mode = 1  # 2
+mode = 2  # 2
 
 
 datasets = read_data_file(default_data_file, max_dataset_index+1, no_names=False)
@@ -50,10 +50,11 @@ if mode == 1:
     #   init_scheduling
     #   stopping_condition
     calls = [
-             AlgorithmCall(tabu_search_all, TabuSearchParams(5, NeighbourMoves.swap, neh, IterationsCondition(100))),
-             AlgorithmCall(tabu_search_all, TabuSearchParams(10, NeighbourMoves.insert, neh, IterationsCondition(100))),
-             AlgorithmCall(tabu_search_all, TabuSearchParams(20, NeighbourMoves.inverse, neh, IterationsCondition(100))),
-             AlgorithmCall(tabu_search_all, TabuSearchParams(1000, NeighbourMoves.inverse, neh, IterationsCondition(100)))]
+             AlgorithmCall(tabu_search_all, TabuSearchParams(10, NeighbourMoves.swap, neh, IterationsCondition(5))),
+             AlgorithmCall(tabu_search_all, TabuSearchParams(10, NeighbourMoves.swap, neh, IterationsCondition(10))),
+             AlgorithmCall(tabu_search_all, TabuSearchParams(10, NeighbourMoves.swap, neh, IterationsCondition(50))),
+             AlgorithmCall(tabu_search_all, TabuSearchParams(10, NeighbourMoves.swap, neh, IterationsCondition(100)))
+            ]
     time_stats = {}
     cmax_stats = {}
     for dataset in datasets:
@@ -77,7 +78,7 @@ if mode == 1:
             time_inner_dictionary.update({algorithm_name: execution_time})
         cmax_stats.update({dataset.name: cmax_inner_dictionary})
         time_stats.update({dataset.name: time_inner_dictionary})
-    csv_file = open(csv_filename, mode="w")
+    csv_file = open(csv_filename, mode="w", newline="")
     if excel_lang == "pl":
         delimiter = ";"
     else:
@@ -109,7 +110,7 @@ elif mode == 2:
     #   neighbour_method: str
     #   init_scheduling
     #   stopping_condition
-    calls = [AlgorithmCall(johnson_rule_multiple), AlgorithmCall(neh),
+    calls = [
              AlgorithmCall(tabu_search_all, TabuSearchParams(10, NeighbourMoves.swap, neh, IterationsCondition(10)))]
     timer = timer.Timer()
     for dataset in datasets:
