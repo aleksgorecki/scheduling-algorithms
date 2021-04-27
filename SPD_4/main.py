@@ -11,14 +11,14 @@ mode = 2  # 2
 
 
 datasets = read_data_file(default_data_file, max_dataset_index+1, no_names=False)
-#datasets = datasets[0:len(datasets)-1]
-#datasets = [datasets[20]]
-datasets = datasets[0:30]
+datasets = datasets[0:len(datasets)]
+# datasets = [datasets[20]]
+# datasets = datasets[0:30]
 
 
 class TabuSearchParams:
-    def __init__(self, tabu_len: int = 10, neighbour_move = NeighbourMoves.swap,
-                 init_scheduling = johnson_rule_multiple, stopping_condition = IterationsCondition(50)):
+    def __init__(self, tabu_len: int = 10, neighbour_move=NeighbourMoves.swap,
+                 init_scheduling=johnson_rule_multiple, stopping_condition=IterationsCondition(50)):
         self.tabu_len = tabu_len
         self.neighbour_move = neighbour_move
         self.init_scheduling = init_scheduling
@@ -27,6 +27,7 @@ class TabuSearchParams:
     def __str__(self):
         return ";tabu" + str(self.tabu_len) + "_" + self.neighbour_move.__name__ + "_" +\
                self.init_scheduling.__name__ + "_" + str(self.stopping_condition)
+
     def __iter__(self):
         return iter([self.tabu_len, self.neighbour_move, self.init_scheduling, self.stopping_condition])
 
@@ -92,8 +93,8 @@ if mode == 1:
     csv_file.close()
 
 elif mode == 2:
-    print_schedule = False
-    calls = []
+    print_schedule = True
+    calls = [AlgorithmCall(schrage)]
     timer = timer.Timer()
     for dataset in datasets:
         print(dataset.name)

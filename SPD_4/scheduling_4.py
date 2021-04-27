@@ -56,13 +56,28 @@ def makespan_rpq(data: SchedulingData):
 def schrage(data: SchedulingData):
     if data.n_machines != 3:
         raise NotRPQException
-    jobs_to_schedule = []  # N_G
-    unscheduled_jobs = []  # N_N
+    data_copy = SchedulingData(name="copy", n_jobs=data.n_jobs, n_machines=data.n_machines, t_matrix=data.t_matrix)
+    N_G = []  # N_G
+    N_N = list(range(0, data_copy.n_jobs, 1))  # N_N
     partial_schedule = []  # sigma
-    time = 0  # zmienna pomocnczia
-    while len(jobs_to_schedule) == 0 or len(unscheduled_jobs) == 0:
-        pass
-    pass
+    time = np.min(data_copy.t_matrix[:, 0])  # zmienna pomocnczia
+    i = 0
+    while len(N_G) != 0 or len(N_N) != 0:
+        print(i)
+        while len(N_N) != 0 and np.min(data_copy.t_matrix[:, 0]) <= time:
+            job = np.argmin(data_copy.t_matrix[:, 0])
+            N_G.append(job)
+            N_N.remove(job)
+            data_copy.t_matrix[job, 0] = np.max(data.t_matrix) + 99
+        if len(N_G) == 0:
+            time = np.argmin(data_copy.t_matrix[:, 0])
+        else:
+            job = np.argmax(data_copy.t_matrix[:, 2])
+            N_G.remove(job)
+            partial_schedule.append(job)
+            time = time + data_copy.t_matrix[job, 1]
+    data.schedule = partial_schedule
+    return -1
 
 
 def pmtn_schrage(data: SchedulingData):
