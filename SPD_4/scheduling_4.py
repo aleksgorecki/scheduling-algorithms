@@ -53,31 +53,50 @@ def makespan_rpq(data: SchedulingData):
     pass
 
 
+def get_min_job(to_compare: list, jobs: list):
+    min_job = jobs[0]
+    min_time = to_compare[min_job]
+    for job in jobs:
+        if to_compare[job] < min_time:
+            min_job = job
+    return min_job
+
+
+def get_max_job(to_compare: list, jobs: list):
+    max_job = jobs[0]
+    max_time = to_compare[max_job]
+    for job in jobs:
+        if to_compare[job] > max_time:
+            max_job = job
+    return max_job
+
+
+
 def schrage(data: SchedulingData):
     if data.n_machines != 3:
         raise NotRPQException
     data_copy = SchedulingData(name="copy", n_jobs=data.n_jobs, n_machines=data.n_machines, t_matrix=data.t_matrix)
-    N_G = []  # N_G
-    N_N = list(range(0, data_copy.n_jobs, 1))  # N_N
+    jobs_to_schedule = []  # N_G
+    unscheduled_jobs = list(range(0, data_copy.n_jobs, 1))  # N_N
     partial_schedule = []  # sigma
     time = np.min(data_copy.t_matrix[:, 0])  # zmienna pomocnczia
     i = 0
-    while len(N_G) != 0 or len(N_N) != 0:
+    while len(jobs_to_schedule) != 0 or len(unscheduled_jobs) != 0:
         print(i)
-        while len(N_N) != 0 and np.min(data_copy.t_matrix[:, 0]) <= time:
-            job = np.argmin(data_copy.t_matrix[:, 0])
-            N_G.append(job)
-            N_N.remove(job)
-            data_copy.t_matrix[job, 0] = np.max(data.t_matrix) + 99
-        if len(N_G) == 0:
-            time = np.argmin(data_copy.t_matrix[:, 0])
+        while len(unscheduled_jobs) != 0 and int(np.min(data_copy.t_matrix[:, 0])) <= time: # tylko z dostępnych w N_N
+            job = np.argmin(data_copy.t_matrix[:, 0]) # tylko z dostępnych w N_N
+            jobs_to_schedule.append(job)
+            unscheduled_jobs.remove(job)
+            data_copy.t_matrix[job, 0] = np.max(data.t_matrix) + 1
+        if len(jobs_to_schedule) == 0:
+            time = np.min(data_copy.t_matrix[:, 0])  # tylko z dostępnych w N_N
         else:
-            job = np.argmax(data_copy.t_matrix[:, 2])
-            N_G.remove(job)
+            job = np.argmax(data_copy.t_matrix[:, 2])  # tylko z dostępnych w N_G
+            jobs_to_schedule.remove(job)
             partial_schedule.append(job)
             time = time + data_copy.t_matrix[job, 1]
     data.schedule = partial_schedule
-    return -1
+    return time
 
 
 def pmtn_schrage(data: SchedulingData):
