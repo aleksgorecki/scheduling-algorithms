@@ -1,13 +1,13 @@
-from scheduling_3 import *
+from scheduling_4 import *
 import csv
 import timer
 
 
-default_data_file = "data/neh.data.txt"
+default_data_file = "data/rpq.test.txt"
 csv_filename = "init2.csv"
 max_dataset_index = -2
 excel_lang = "pl"  # "eng"
-mode = 1  # 2
+mode = 2  # 2
 
 
 datasets = read_data_file(default_data_file, max_dataset_index+1, no_names=False)
@@ -43,17 +43,7 @@ class AlgorithmCall:
 
 if mode == 1:
     timer = timer.Timer()
-    # parametry tabu search:
-    #   tabu_len: int
-    #   n_neighbours: int
-    #   neighbour_method: str
-    #   init_scheduling
-    #   stopping_condition
-    calls = [
-             AlgorithmCall(tabu_search_all, TabuSearchParams(10, NeighbourMoves.swap, naive, IterationsCondition(50))),
-             AlgorithmCall(tabu_search_all, TabuSearchParams(10, NeighbourMoves.insert, johnson_rule_multiple, IterationsCondition(50))),
-             AlgorithmCall(tabu_search_all, TabuSearchParams(10, NeighbourMoves.inverse, neh, IterationsCondition(50))),
-            ]
+    calls = []
     time_stats = {}
     cmax_stats = {}
     for dataset in datasets:
@@ -103,14 +93,7 @@ if mode == 1:
 
 elif mode == 2:
     print_schedule = False
-    # parametry tabu search:
-    #   tabu_len: int
-    #   n_neighbours: int
-    #   neighbour_method: str
-    #   init_scheduling
-    #   stopping_condition
-    calls = [AlgorithmCall(neh),
-             AlgorithmCall(tabu_search_all, TabuSearchParams(10, NeighbourMoves.swap, neh, IterationsCondition(100)))]
+    calls = []
     timer = timer.Timer()
     for dataset in datasets:
         print(dataset.name)
@@ -126,12 +109,3 @@ elif mode == 2:
             print("    time: ", execution_time)
             if print_schedule:
                 print("    schedule: ", dataset.schedule)
-# data = read_data_file(default_data_file, 21, no_names=False)[20]
-# timer.start()
-# print(tabu_search(data,
-#                   tabu_len=30,
-#                   n_neighbours=100,
-#                   neighbour_method="swap",
-#                   init_scheduling_func=johnson_rule_multiple,
-#                   stopping_condition=IterationsCondition(100)))
-# print(timer.stop())
