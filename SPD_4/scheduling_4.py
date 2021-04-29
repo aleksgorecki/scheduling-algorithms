@@ -9,6 +9,38 @@ class NotRPQException(Exception):
         super().__init__(self.message)
 
 
+class RPQJob:
+    def __init__(self, r: int, p: int, q: int, job_id: int):
+        self.r = r
+        self.p = p
+        self.q = q
+        self.job_id = job_id
+
+
+class RPQSchedulingData:
+    def __init__(self, data: SchedulingData = None, rpq_jobs: list = None):
+        if data is not None:
+            if data.n_machines != 3:
+                raise NotRPQException
+            else:
+                self.jobs = []
+                for job_id, row in enumerate(data.t_matrix):
+                    self.jobs.append(RPQJob(r=row[0], p=row[1], q=row[2], job_id=job_id))
+                if len(self.jobs) != data.n_jobs:
+                    raise Exception
+        elif data is None and rpq_jobs is not None:
+            self.jobs = rpq_jobs.copy()
+        else:
+            raise Exception
+
+    def copy(self):
+        return RPQSchedulingData(rpq_jobs=self.jobs)
+
+
+class Heap:
+    pass
+
+
 class PriorityQueue:
     class Node:
         def __init__(self, elem, priority):
@@ -71,7 +103,6 @@ def get_max_job(to_compare: list, jobs: list):
     return max_job
 
 
-
 def schrage(data: SchedulingData):
     if data.n_machines != 3:
         raise NotRPQException
@@ -83,8 +114,8 @@ def schrage(data: SchedulingData):
     i = 0
     while len(jobs_to_schedule) != 0 or len(unscheduled_jobs) != 0:
         print(i)
-        while len(unscheduled_jobs) != 0 and int(np.min(data_copy.t_matrix[:, 0])) <= time: # tylko z dostępnych w N_N
-            job = np.argmin(data_copy.t_matrix[:, 0]) # tylko z dostępnych w N_N
+        while len(unscheduled_jobs) != 0 and int(np.min(data_copy.t_matrix[:, 0])) <= time:  # tylko z dostępnych w N_N
+            job = np.argmin(data_copy.t_matrix[:, 0])  # tylko z dostępnych w N_N
             jobs_to_schedule.append(job)
             unscheduled_jobs.remove(job)
             data_copy.t_matrix[job, 0] = np.max(data.t_matrix) + 1
