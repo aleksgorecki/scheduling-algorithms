@@ -16,7 +16,7 @@ datasets = datasets[0:len(datasets)]
 #datasets = [datasets[max_dataset_index]]
 # datasets = datasets[0:30]
 
-datasets = [custom_dataset(n_jobs=5000, n_machines=3, name="5000")]
+datasets = [custom_dataset(n_jobs=5000, n_machines=3, name="1000")]
 
 
 
@@ -98,7 +98,7 @@ if mode == 1:
 
 elif mode == 2:
     print_schedule = False
-    calls = [AlgorithmCall(schrage), AlgorithmCall(schrage_queue)]
+    calls = [AlgorithmCall(schrage), AlgorithmCall(schrage_heap)]
     timer = timer.Timer()
     for dataset in datasets:
         print(dataset.name)

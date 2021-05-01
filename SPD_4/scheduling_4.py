@@ -98,68 +98,108 @@ class Heap:
     def right_child(pos) -> int:
         return pos*2 + 2
 
-    def remove(self, x) -> None:
-        self.heap_list.remove(x)
+    def __getitem__(self, item):
+        return self.heap_list[item]
 
-    def append(self, x, compare_func: callable) -> None:
+    def swap(self, pos_1, pos_2):
+        self.heap_list[pos_1], self.heap_list[pos_2] = self.heap_list[pos_2], self.heap_list[pos_1]
+
+    def heapify(self, pos: int, key: callable = lambda j: j.q):
+        pos_largest = pos
+        pos_left = self.left_child(pos)
+        pos_right = self.right_child(pos)
+        if pos_left < len(self) and key(self[pos_left]) > key(self[pos_largest]):
+            pos_largest = pos_left
+        if pos_right < len(self) and key(self[pos_right]) > key(self[pos_largest]):
+            pos_largest = pos_right
+        if pos_largest != pos:
+            self.swap(pos, pos_largest)
+            self.heapify(pos_largest)
+
+    def remove(self, x) -> None:
+        i = self.heap_list.index(x)
+        self.heap_list.pop(i)
+        self.heapify(i)
+
+    def append(self, x, key: callable) -> None:
+        #  key = lambda x: x
         if len(self) == 0:
             self.heap_list.append(x)
         else:
-            pass
-
-
-class PriorityQueue:
-    class Node:
-        def __init__(self, elem, priority):
-            self.elem = elem
-            self.priority = priority
-
-    def __init__(self, jobs: list = None):
-        if jobs is not None:
-            self.queue = []
-            for job in jobs.copy():
-                self.queue.append(self.Node(job, 0))
-        else:
-            self.queue = list()
-
-    def __len__(self):
-        return len(self.queue)
-
-    def __iter__(self):
-        return iter(self.queue)
-
-    def insert(self, new_node: Node):
-        if len(self) == 0:
-            self.queue.append(new_node)
-        else:
-            for i, node in enumerate(self.queue):
-                if new_node.priority <= node.priority:
-                    if i == len(self)-1:
-                        self.queue.append(new_node)
-                        break
+            self.heap_list.append(x)
+            current_position = len(self)-1
+            while True:
+                if key(x) > key(self.heap_list[self.parent(current_position)]):
+                    self.swap(current_position, self.parent(current_position))
+                    current_position = self.parent(current_position)
                 else:
-                    self.queue.insert(i, new_node)
                     break
 
-    def pop(self):
-        return self.queue.pop(0)
-        pass
 
-    def remove(self, x):
-        for i, node in enumerate(self.queue):
-            if x == node.elem:
-                self.queue.pop(i)
-                return
-        raise Exception
+class MinHeap:
+    def __init__(self) -> None:
+        self.heap_list = []
 
-    def __str__(self):
-        ret = ""
-        for node in self.queue:
-            ret = ret + "->" + str(node.elem)
-        return ret
+    def __len__(self) -> int:
+        return len(self.heap_list)
 
-    def __repr__(self):
-        print(str(self))
+    def __str__(self) -> str:
+        return str(self.heap_list)
+
+    def __repr__(self) -> str:
+        return str(self.heap_list)
+
+    def __iter__(self):
+        return iter(self.heap_list)
+
+    @staticmethod
+    def parent(pos) -> int:
+        return pos//2
+
+    @staticmethod
+    def left_child(pos) -> int:
+        return pos*2 + 1
+
+    @staticmethod
+    def right_child(pos) -> int:
+        return pos*2 + 2
+
+    def swap(self, pos_1, pos_2):
+        self.heap_list[pos_1], self.heap_list[pos_2] = self.heap_list[pos_2], self.heap_list[pos_1]
+
+    def __getitem__(self, item):
+        return self.heap_list[item]
+
+    def heapify(self, pos: int, key: callable = lambda j: j.r):
+        pos_largest = pos
+        pos_left = self.left_child(pos)
+        pos_right = self.right_child(pos)
+        if pos_left < len(self) and key(self[pos_left]) < key(self[pos_largest]):
+            pos_largest = pos_left
+        if pos_right < len(self) and key(self[pos_right]) < key(self[pos_largest]):
+            pos_largest = pos_right
+        if pos_largest != pos:
+            self.swap(pos, pos_largest)
+            self.heapify(pos_largest)
+
+    def remove(self, x) -> None:
+        i = self.heap_list.index(x)
+        self.heap_list.pop(i)
+        self.heapify(i)
+
+    def append(self, x, key: callable) -> None:
+        #  key = lambda x: x
+        if len(self) == 0:
+            self.heap_list.append(x)
+        else:
+            self.heap_list.append(x)
+            current_position = len(self)-1
+            while True:
+                if key(x) < key(self.heap_list[self.parent(current_position)]):
+                    self.swap(current_position, self.parent(current_position))
+                    current_position = self.parent(current_position)
+                else:
+                    break
 
 
 def schrage(data: RPQSchedulingData or SchedulingData):
@@ -221,27 +261,30 @@ def pmtn_schrage(data: RPQSchedulingData or SchedulingData):
     return cmax
 
 
-def schrage_queue(data: RPQSchedulingData or SchedulingData):
+def schrage_heap(data: RPQSchedulingData or SchedulingData):
     if type(data) == SchedulingData:
         data = RPQSchedulingData(data)
-    n_g = PriorityQueue()
-    n_n = PriorityQueue(data.jobs)
+    n_g = Heap()
+    n_n = MinHeap()
+    for job in data.jobs:
+        n_n.append(job, key=lambda j: j.r)
     sigma = []
-    t = (min(n_n, key=lambda node: node.elem.r)).elem.r  # zmienna pomocnczia
+    t = (min(n_n, key=lambda job: job.r)).r  # zmienna pomocnczia
     i = 1
     cmax = 0
     while len(n_g) != 0 or len(n_n) != 0:
-        while len(n_n) != 0 and (min(n_n, key=lambda node: node.elem.r)).elem.r <= t:  # tylko z dostępnych w N_N
-            j = min(n_n, key=lambda node: node.elem.r).elem
-            n_g.insert(PriorityQueue.Node(j, j.r))
+        while len(n_n) != 0 and (min(n_n, key=lambda job: job.r)).r <= t:  # tylko z dostępnych w N_N
+            j = min(n_n, key=lambda job: job.r)
+            n_g.append(j, key=lambda x: x.q)
             n_n.remove(j)
         if len(n_g) == 0:
-            t = (min(n_n, key=lambda node: node.elem.r)).elem.r
+            t = (min(n_n, key=lambda job: job.r)).r
         else:
-            j = max(n_g, key=lambda node: node.elem.q).elem
+            j = max(n_g, key=lambda job: job.q)
             n_g.remove(j)
             sigma.append(j)
             t = t + j.p
             i = i + 1
             cmax = max(cmax, t + j.q)
+    print(data.schedule)
     return cmax
