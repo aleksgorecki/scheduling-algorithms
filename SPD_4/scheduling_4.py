@@ -71,7 +71,41 @@ def read_data_file_rpq(filename: str, n_sets: int, no_names: bool = False) -> ty
 
 
 class Heap:
-    pass
+    def __init__(self) -> None:
+        self.heap_list = []
+
+    def __len__(self) -> int:
+        return len(self.heap_list)
+
+    def __str__(self) -> str:
+        return str(self.heap_list)
+
+    def __repr__(self) -> str:
+        return str(self.heap_list)
+
+    def __iter__(self):
+        return iter(self.heap_list)
+
+    @staticmethod
+    def parent(pos) -> int:
+        return pos//2
+
+    @staticmethod
+    def left_child(pos) -> int:
+        return pos*2 + 1
+
+    @staticmethod
+    def right_child(pos) -> int:
+        return pos*2 + 2
+
+    def remove(self, x) -> None:
+        self.heap_list.remove(x)
+
+    def append(self, x, compare_func: callable) -> None:
+        if len(self) == 0:
+            self.heap_list.append(x)
+        else:
+            pass
 
 
 class PriorityQueue:
