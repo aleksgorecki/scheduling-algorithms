@@ -14,7 +14,7 @@ class RPQJob:
         self.r = r
         self.p = p
         self.q = q
-        self.job_id = job_id
+        self.id = job_id
 
 
 class RPQSchedulingData:
@@ -32,9 +32,42 @@ class RPQSchedulingData:
             self.jobs = rpq_jobs.copy()
         else:
             raise Exception
+        self.schedule = []
 
     def copy(self):
         return RPQSchedulingData(rpq_jobs=self.jobs)
+
+
+def read_data_file_rpq(filename: str, n_sets: int, no_names: bool = False) -> typing.List[SchedulingData]:
+    file = open(filename)
+    ret = []  # lista do której będą dodawane wczytywane zestawy danych
+    sets_read = 0  # licznik wczytanych zestawów
+    if not no_names:
+        while sets_read != n_sets:  # dopóki nie wczytano
+            line = file.readline()  # wczytany wiersz
+            if not line:  # jeśli nie udaje sie dalej wczytać wieszy, przerwij pętlę (np. EOF)
+                break
+            if line[0:4] == "data":  # jeśli linia zaczyna sie od 'data' to rozpoznano początek zestawu
+                name = line
+                n_jobs = int(file.readline())
+                t_matrix = np.empty(shape=(n_jobs, 3))
+                for row in range(0, n_jobs, 1):
+                    t_matrix[row] = np.array([int(column) for column in file.readline().split(' ')])
+                sets_read = sets_read + 1  # inkrementacja licznika wczytanych zestawów
+                ret.append(SchedulingData(name, n_jobs, 3, t_matrix))
+    else:
+        while sets_read != n_sets:  # dopóki nie wczytano
+            line = file.readline()  # wczytany wiersz
+            if not line:  # jeśli nie udaje sie dalej wczytać wieszy, przerwij pętlę (np. EOF)
+                break
+            n_jobs = int(file.readline())
+            t_matrix = np.empty(shape=(n_jobs, 3))
+            for row in range(0, n_jobs, 1):
+                t_matrix[row] = np.array([int(column) for column in file.readline().split(' ')])
+            sets_read = sets_read + 1  # inkrementacja licznika wczytanych zestawów
+            ret.append(SchedulingData("no_name", n_jobs, 3, t_matrix))
+    file.close()
+    return ret
 
 
 class Heap:
@@ -85,50 +118,29 @@ def makespan_rpq(data: SchedulingData):
     pass
 
 
-def get_min_job(to_compare: list, jobs: list):
-    min_job = jobs[0]
-    min_time = to_compare[min_job]
-    for job in jobs:
-        if to_compare[job] < min_time:
-            min_job = job
-    return min_job
-
-
-def get_max_job(to_compare: list, jobs: list):
-    max_job = jobs[0]
-    max_time = to_compare[max_job]
-    for job in jobs:
-        if to_compare[job] > max_time:
-            max_job = job
-    return max_job
-
-
-def schrage(data: SchedulingData):
-    if data.n_machines != 3:
-        raise NotRPQException
-    data_copy = SchedulingData(name="copy", n_jobs=data.n_jobs, n_machines=data.n_machines, t_matrix=data.t_matrix)
-    jobs_to_schedule = []  # N_G
-    unscheduled_jobs = list(range(0, data_copy.n_jobs, 1))  # N_N
-    partial_schedule = []  # sigma
-    time = np.min(data_copy.t_matrix[:, 0])  # zmienna pomocnczia
-    i = 0
-    while len(jobs_to_schedule) != 0 or len(unscheduled_jobs) != 0:
-        print(i)
-        while len(unscheduled_jobs) != 0 and int(np.min(data_copy.t_matrix[:, 0])) <= time:  # tylko z dostępnych w N_N
-            job = np.argmin(data_copy.t_matrix[:, 0])  # tylko z dostępnych w N_N
-            jobs_to_schedule.append(job)
-            unscheduled_jobs.remove(job)
-            data_copy.t_matrix[job, 0] = np.max(data.t_matrix) + 1
-        if len(jobs_to_schedule) == 0:
-            time = np.min(data_copy.t_matrix[:, 0])  # tylko z dostępnych w N_N
+def schrage(data: RPQSchedulingData or SchedulingData):
+    if type(data) == SchedulingData:
+        data = RPQSchedulingData(data)
+    n_g = []
+    n_n = data.jobs
+    sigma = []
+    t = (min(n_n, key=lambda job: job.r)).r  # zmienna pomocnczia
+    i = 1
+    cmax = 0
+    while len(n_g) != 0 or len(n_n) != 0:
+        while len(n_n) != 0 and (min(n_n, key=lambda job: job.r)).r <= t:  # tylko z dostępnych w N_N
+            j = min(n_n, key=lambda job: job.r)
+            n_g.append(j)
+            n_n.remove(j)
+        if len(n_g) == 0:
+            t = (min(n_n, key=lambda job: job.r)).r
         else:
-            job = np.argmax(data_copy.t_matrix[:, 2])  # tylko z dostępnych w N_G
-            jobs_to_schedule.remove(job)
-            partial_schedule.append(job)
-            time = time + data_copy.t_matrix[job, 1]
-    data.schedule = partial_schedule
-    return time
-
-
-def pmtn_schrage(data: SchedulingData):
-    pass
+            j = max(n_g, key=lambda job: job.q)
+            n_g.remove(j)
+            sigma.append(j)
+            t = t + j.p
+            i = i + 1
+            cmax = max(cmax, t + j.q)
+    data.schedule = [int(job.id) for job in sigma]
+    print(data.schedule)
+    return cmax
