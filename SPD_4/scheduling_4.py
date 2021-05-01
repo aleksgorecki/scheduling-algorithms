@@ -112,12 +112,6 @@ class PriorityQueue:
         print(str(self))
 
 
-def makespan_rpq(data: SchedulingData):
-    if data.n_machines != 3:
-        raise NotRPQException
-    pass
-
-
 def schrage(data: RPQSchedulingData or SchedulingData):
     if type(data) == SchedulingData:
         data = RPQSchedulingData(data)
@@ -141,6 +135,56 @@ def schrage(data: RPQSchedulingData or SchedulingData):
             t = t + j.p
             i = i + 1
             cmax = max(cmax, t + j.q)
-    data.schedule = [int(job.id) for job in sigma]
+    print(data.schedule)
+    return cmax
+
+
+def pmtn_schrage(data: RPQSchedulingData or SchedulingData):
+    if type(data) == SchedulingData:
+        data = RPQSchedulingData(data)
+    n_g = []
+    n_n = data.jobs
+    t = (min(n_n, key=lambda job: job.r)).r  # zmienna pomocnczia
+    i = 1
+    cmax = 0
+    while len(n_g) != 0 or len(n_n) != 0:
+        while len(n_n) != 0 and (min(n_n, key=lambda job: job.r)).r <= t:  # tylko z dostępnych w N_N
+            j = min(n_n, key=lambda job: job.r)
+            n_g.append(j)
+            n_n.remove(j)
+        if len(n_g) == 0:
+            t = (min(n_n, key=lambda job: job.r)).r
+        else:
+            j = max(n_g, key=lambda job: job.q)
+            n_g.remove(j)
+            t = t + j.p
+            i = i + 1
+            cmax = max(cmax, t + j.q)
+    return cmax
+
+
+def schrage_queue(data: RPQSchedulingData or SchedulingData):
+    if type(data) == SchedulingData:
+        data = RPQSchedulingData(data)
+    n_g = []
+    n_n = data.jobs
+    sigma = []
+    t = (min(n_n, key=lambda job: job.r)).r  # zmienna pomocnczia
+    i = 1
+    cmax = 0
+    while len(n_g) != 0 or len(n_n) != 0:
+        while len(n_n) != 0 and (min(n_n, key=lambda job: job.r)).r <= t:  # tylko z dostępnych w N_N
+            j = min(n_n, key=lambda job: job.r)
+            n_g.append(j)
+            n_n.remove(j)
+        if len(n_g) == 0:
+            t = (min(n_n, key=lambda job: job.r)).r
+        else:
+            j = max(n_g, key=lambda job: job.q)
+            n_g.remove(j)
+            sigma.append(j)
+            t = t + j.p
+            i = i + 1
+            cmax = max(cmax, t + j.q)
     print(data.schedule)
     return cmax

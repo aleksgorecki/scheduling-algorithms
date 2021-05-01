@@ -3,17 +3,17 @@ import csv
 import timer
 
 
-default_data_file = "data/schr.data.txt"
+default_data_file = "data/in50.txt"
 csv_filename = "init2.csv"
-max_dataset_index = 1
+max_dataset_index = -2
 excel_lang = "pl"  # "eng"
 mode = 2  # 2
 
 
-# datasets = read_data_file(default_data_file, max_dataset_index+1, no_names=False)
-datasets = read_data_file_rpq(default_data_file, max_dataset_index+1, no_names=False)
-#datasets = datasets[0:len(datasets)]
-datasets = [datasets[max_dataset_index]]
+datasets = read_data_file(default_data_file, max_dataset_index+1, no_names=True)
+#datasets = read_data_file_rpq(default_data_file, max_dataset_index+1, no_names=False)
+datasets = datasets[0:len(datasets)]
+#datasets = [datasets[max_dataset_index]]
 # datasets = datasets[0:30]
 
 

@@ -52,10 +52,10 @@ def read_data_file(filename: str, n_sets: int, no_names: bool = False) -> typing
                 break
             if line[0:4] == "data":  # jeśli linia zaczyna sie od 'data' to rozpoznano początek zestawu
                 name = line
-                [n_jobs, n_machines] = [int(item) for item in file.readline().split(' ')]  # konwersja na inty 2 wpisów
+                [n_jobs, n_machines] = [int(item) for item in file.readline().split()]  # konwersja na inty 2 wpisów
                 t_matrix = np.empty(shape=(n_jobs, n_machines))
                 for row in range(0, n_jobs, 1):
-                    t_matrix[row] = np.array([int(column) for column in file.readline().split(' ')])
+                    t_matrix[row] = np.array([int(column) for column in file.readline().split()])
                 sets_read = sets_read + 1  # inkrementacja licznika wczytanych zestawów
                 ret.append(SchedulingData(name, n_jobs, n_machines, t_matrix))
     else:
@@ -63,10 +63,10 @@ def read_data_file(filename: str, n_sets: int, no_names: bool = False) -> typing
             line = file.readline()  # wczytany wiersz
             if not line:  # jeśli nie udaje sie dalej wczytać wieszy, przerwij pętlę (np. EOF)
                 break
-            [n_jobs, n_machines] = [int(item) for item in line.split(' ')]  # konwersja na inty 2 wpisów
+            [n_jobs, n_machines] = [int(item) for item in line.split()]  # konwersja na inty 2 wpisów
             t_matrix = np.empty(shape=(n_jobs, n_machines))
             for row in range(0, n_jobs, 1):
-                t_matrix[row] = np.array([int(column) for column in file.readline().split(' ')])
+                t_matrix[row] = np.array([int(column) for column in file.readline().split()])
             sets_read = sets_read + 1  # inkrementacja licznika wczytanych zestawów
             ret.append(SchedulingData("no_name", n_jobs, n_machines, t_matrix))
     file.close()
