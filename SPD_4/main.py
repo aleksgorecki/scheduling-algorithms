@@ -16,6 +16,9 @@ datasets = datasets[0:len(datasets)]
 #datasets = [datasets[max_dataset_index]]
 # datasets = datasets[0:30]
 
+datasets = [custom_dataset(n_jobs=5000, n_machines=3, name="5000")]
+
+
 
 class TabuSearchParams:
     def __init__(self, tabu_len: int = 10, neighbour_move=NeighbourMoves.swap,
@@ -94,8 +97,8 @@ if mode == 1:
     csv_file.close()
 
 elif mode == 2:
-    print_schedule = True
-    calls = [AlgorithmCall(schrage)]
+    print_schedule = False
+    calls = [AlgorithmCall(schrage), AlgorithmCall(schrage_queue)]
     timer = timer.Timer()
     for dataset in datasets:
         print(dataset.name)

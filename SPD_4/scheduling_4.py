@@ -80,27 +80,43 @@ class PriorityQueue:
             self.elem = elem
             self.priority = priority
 
-    def __init__(self):
-        self.queue = list()
+    def __init__(self, jobs: list = None):
+        if jobs is not None:
+            self.queue = []
+            for job in jobs.copy():
+                self.queue.append(self.Node(job, 0))
+        else:
+            self.queue = list()
 
     def __len__(self):
         return len(self.queue)
 
+    def __iter__(self):
+        return iter(self.queue)
+
     def insert(self, new_node: Node):
-        if len(self):
+        if len(self) == 0:
             self.queue.append(new_node)
         else:
             for i, node in enumerate(self.queue):
-                if new_node.priority >= node.priority:
+                if new_node.priority <= node.priority:
                     if i == len(self)-1:
                         self.queue.append(new_node)
+                        break
                 else:
                     self.queue.insert(i, new_node)
-        pass
+                    break
 
     def pop(self):
         return self.queue.pop(0)
         pass
+
+    def remove(self, x):
+        for i, node in enumerate(self.queue):
+            if x == node.elem:
+                self.queue.pop(i)
+                return
+        raise Exception
 
     def __str__(self):
         ret = ""
@@ -144,19 +160,27 @@ def pmtn_schrage(data: RPQSchedulingData or SchedulingData):
         data = RPQSchedulingData(data)
     n_g = []
     n_n = data.jobs
-    t = (min(n_n, key=lambda job: job.r)).r  # zmienna pomocnczia
+    t = 0
     i = 1
     cmax = 0
+    l = RPQJob(0, 0, 0, -1)
+    q_0 = math.inf
     while len(n_g) != 0 or len(n_n) != 0:
         while len(n_n) != 0 and (min(n_n, key=lambda job: job.r)).r <= t:  # tylko z dostępnych w N_N
             j = min(n_n, key=lambda job: job.r)
             n_g.append(j)
             n_n.remove(j)
+            if j.q > l.q:
+                l.p = t - j.r
+                t = j.r
+                if l.p > 0:
+                    n_g.append(l)
         if len(n_g) == 0:
             t = (min(n_n, key=lambda job: job.r)).r
         else:
             j = max(n_g, key=lambda job: job.q)
             n_g.remove(j)
+            l = j
             t = t + j.p
             i = i + 1
             cmax = max(cmax, t + j.q)
@@ -166,25 +190,24 @@ def pmtn_schrage(data: RPQSchedulingData or SchedulingData):
 def schrage_queue(data: RPQSchedulingData or SchedulingData):
     if type(data) == SchedulingData:
         data = RPQSchedulingData(data)
-    n_g = []
-    n_n = data.jobs
+    n_g = PriorityQueue()
+    n_n = PriorityQueue(data.jobs)
     sigma = []
-    t = (min(n_n, key=lambda job: job.r)).r  # zmienna pomocnczia
+    t = (min(n_n, key=lambda node: node.elem.r)).elem.r  # zmienna pomocnczia
     i = 1
     cmax = 0
     while len(n_g) != 0 or len(n_n) != 0:
-        while len(n_n) != 0 and (min(n_n, key=lambda job: job.r)).r <= t:  # tylko z dostępnych w N_N
-            j = min(n_n, key=lambda job: job.r)
-            n_g.append(j)
+        while len(n_n) != 0 and (min(n_n, key=lambda node: node.elem.r)).elem.r <= t:  # tylko z dostępnych w N_N
+            j = min(n_n, key=lambda node: node.elem.r).elem
+            n_g.insert(PriorityQueue.Node(j, j.r))
             n_n.remove(j)
         if len(n_g) == 0:
-            t = (min(n_n, key=lambda job: job.r)).r
+            t = (min(n_n, key=lambda node: node.elem.r)).elem.r
         else:
-            j = max(n_g, key=lambda job: job.q)
+            j = max(n_g, key=lambda node: node.elem.q).elem
             n_g.remove(j)
             sigma.append(j)
             t = t + j.p
             i = i + 1
             cmax = max(cmax, t + j.q)
-    print(data.schedule)
     return cmax
