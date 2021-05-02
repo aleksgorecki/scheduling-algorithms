@@ -1,4 +1,5 @@
 from scheduling_3 import *
+import operator
 
 
 class NotRPQException(Exception):
@@ -15,6 +16,12 @@ class RPQJob:
         self.p = p
         self.q = q
         self.id = job_id
+
+    def __str__(self):
+        return f"{self.r} {self.p} {self.q}"
+
+    def __repr__(self):
+        return str(self)
 
 
 class RPQSchedulingData:
@@ -36,6 +43,201 @@ class RPQSchedulingData:
 
     def copy(self):
         return RPQSchedulingData(rpq_jobs=self.jobs)
+
+
+class HeapList:
+    def __init__(self, key: callable = lambda x: x, op: operator = operator.gt) -> None:
+        self.heap_list = []
+        self.key = key
+        self.op = op
+
+    def __len__(self) -> int:
+        return len(self.heap_list)
+
+    def __str__(self) -> str:
+        return str(self.heap_list)
+
+    def __repr__(self) -> str:
+        return str(self.heap_list)
+
+    def __iter__(self):
+        return iter(self.heap_list)
+
+    def __getitem__(self, item):
+        return self.heap_list[item]
+
+    def __setitem__(self, key, value):
+        self.heap_list[key] = value
+
+    def __bool__(self):
+        if len(self.heap_list) > 0:
+            return True
+        else:
+            return False
+
+    @staticmethod
+    def parent(pos) -> int:
+        return (pos - 1)//2
+
+    @staticmethod
+    def left_child(pos) -> int:
+        return pos*2 + 1
+
+    @staticmethod
+    def right_child(pos) -> int:
+        return pos*2 + 2
+
+    def swap(self, pos_1, pos_2):
+        self.heap_list[pos_1], self.heap_list[pos_2] = self.heap_list[pos_2], self.heap_list[pos_1]
+
+    def heapify(self, pos: int):
+        key = self.key
+        op = self.op
+        largest = pos
+        left = self.left_child(pos)
+        right = self.right_child(pos)
+        if left < len(self) and op(key(self[left]), key(self[largest])):
+            largest = left
+        if right < len(self) and op(key(self[right]), key(self[largest])):
+            largest = right
+        if largest != pos:
+            self.swap(pos, largest)
+            self.heapify(largest)
+
+    def root(self):
+        return self[0]
+
+    def pop_root(self):
+        if len(self) > 1:
+            self[0] = self.heap_list.pop()
+            self.heapify(0)
+        else:
+            self.heap_list.pop()
+
+    def append(self, x) -> None:
+        key = self.key
+        if len(self) == 0:
+            self.heap_list.append(x)
+        else:
+            self.heap_list.append(x)
+            pos = len(self) - 1
+            while pos > 0:
+                if self.op(key(x), key(self.heap_list[self.parent(pos)])):
+                    self.swap(pos, self.parent(pos))
+                    pos = self.parent(pos)
+                else:
+                    break
+
+
+def schrage(data: RPQSchedulingData or SchedulingData):
+    if type(data) == SchedulingData:
+        data = RPQSchedulingData(data)
+    n_g = []
+    n_n = data.jobs
+    sigma = []
+    t = (min(n_n, key=lambda job: job.r)).r  # zmienna pomocnczia
+    cmax = 0
+    while n_g or n_n:
+        while n_n and (min(n_n, key=lambda job: job.r)).r <= t:  # tylko z dostępnych w N_N
+            j = min(n_n, key=lambda job: job.r)
+            n_g.append(j)
+            n_n.remove(j)
+        if len(n_g) == 0:
+            t = (min(n_n, key=lambda job: job.r)).r
+        else:
+            j = max(n_g, key=lambda job: job.q)
+            n_g.remove(j)
+            sigma.append(j)
+            t = t + j.p
+            cmax = max(cmax, t + j.q)
+    print(data.schedule)
+    return cmax
+
+
+def pmtn_schrage(data: RPQSchedulingData or SchedulingData):
+    if type(data) == SchedulingData:
+        data = RPQSchedulingData(data)
+    n_g = []
+    n_n = data.jobs
+    t = 0
+    cmax = 0
+    l = RPQJob(0, 0, 0, -1)
+    while n_g or n_n:
+        while n_n and (min(n_n, key=lambda job: job.r)).r <= t:  # tylko z dostępnych w N_N
+            j = min(n_n, key=lambda job: job.r)
+            n_g.append(j)
+            n_n.remove(j)
+            if j.q > l.q:
+                l.p = t - j.r
+                t = j.r
+                if l.p > 0:
+                    n_g.append(l)
+        if len(n_g) == 0:
+            t = (min(n_n, key=lambda job: job.r)).r
+        else:
+            j = max(n_g, key=lambda job: job.q)
+            n_g.remove(j)
+            l = j
+            t = t + j.p
+            cmax = max(cmax, t + j.q)
+    return cmax
+
+
+def schrage_heap(data: RPQSchedulingData or SchedulingData):
+    if type(data) == SchedulingData:
+        data = RPQSchedulingData(data)
+    n_g = HeapList(key=lambda j: j.q, op=operator.gt)
+    n_n = HeapList(key=lambda j: j.r, op=operator.lt)
+    for job in data.jobs:
+        n_n.append(job)
+    sigma = []
+    t = n_n.root().r
+    cmax = 0
+    while n_g or n_n:
+        while n_n and n_n.root().r <= t:
+            j = n_n.root()
+            n_g.append(j)
+            n_n.pop_root()
+        if len(n_g) == 0:
+            t = n_n.root().r
+        else:
+            j = n_g.root()
+            n_g.pop_root()
+            sigma.append(j)
+            t = t + j.p
+            cmax = max(cmax, t + j.q)
+    return cmax
+
+
+def pmtn_schrage_heap(data: RPQSchedulingData or SchedulingData):
+    if type(data) == SchedulingData:
+        data = RPQSchedulingData(data)
+    n_g = HeapList(key=lambda j: j.q, op=operator.gt)
+    n_n = HeapList(key=lambda j: j.r, op=operator.lt)
+    for job in data.jobs:
+        n_n.append(job)
+    t = n_n.root().r
+    cmax = 0
+    l = RPQJob(0, 0, 0, -1)
+    while n_g or n_n:
+        while n_n and n_n.root().r <= t:
+            j = n_n.root()
+            n_g.append(j)
+            n_n.pop_root()
+            if j.q > l.q:
+                l.p = t - j.r
+                t = j.r
+                if l.p > 0:
+                    n_g.append(l)
+        if len(n_g) == 0:
+            t = n_n.root().r
+        else:
+            j = n_g.root()
+            n_g.pop_root()
+            l = j
+            t = t + j.p
+            cmax = max(cmax, t + j.q)
+    return cmax
 
 
 def read_data_file_rpq(filename: str, n_sets: int, no_names: bool = False) -> typing.List[SchedulingData]:
@@ -68,223 +270,3 @@ def read_data_file_rpq(filename: str, n_sets: int, no_names: bool = False) -> ty
             ret.append(SchedulingData("no_name", n_jobs, 3, t_matrix))
     file.close()
     return ret
-
-
-class Heap:
-    def __init__(self) -> None:
-        self.heap_list = []
-
-    def __len__(self) -> int:
-        return len(self.heap_list)
-
-    def __str__(self) -> str:
-        return str(self.heap_list)
-
-    def __repr__(self) -> str:
-        return str(self.heap_list)
-
-    def __iter__(self):
-        return iter(self.heap_list)
-
-    @staticmethod
-    def parent(pos) -> int:
-        return pos//2
-
-    @staticmethod
-    def left_child(pos) -> int:
-        return pos*2 + 1
-
-    @staticmethod
-    def right_child(pos) -> int:
-        return pos*2 + 2
-
-    def __getitem__(self, item):
-        return self.heap_list[item]
-
-    def swap(self, pos_1, pos_2):
-        self.heap_list[pos_1], self.heap_list[pos_2] = self.heap_list[pos_2], self.heap_list[pos_1]
-
-    def heapify(self, pos: int, key: callable = lambda j: j.q):
-        pos_largest = pos
-        pos_left = self.left_child(pos)
-        pos_right = self.right_child(pos)
-        if pos_left < len(self) and key(self[pos_left]) > key(self[pos_largest]):
-            pos_largest = pos_left
-        if pos_right < len(self) and key(self[pos_right]) > key(self[pos_largest]):
-            pos_largest = pos_right
-        if pos_largest != pos:
-            self.swap(pos, pos_largest)
-            self.heapify(pos_largest)
-
-    def remove(self, x) -> None:
-        i = self.heap_list.index(x)
-        self.heap_list.pop(i)
-        self.heapify(i)
-
-    def append(self, x, key: callable) -> None:
-        #  key = lambda x: x
-        if len(self) == 0:
-            self.heap_list.append(x)
-        else:
-            self.heap_list.append(x)
-            current_position = len(self)-1
-            while True:
-                if key(x) > key(self.heap_list[self.parent(current_position)]):
-                    self.swap(current_position, self.parent(current_position))
-                    current_position = self.parent(current_position)
-                else:
-                    break
-
-
-class MinHeap:
-    def __init__(self) -> None:
-        self.heap_list = []
-
-    def __len__(self) -> int:
-        return len(self.heap_list)
-
-    def __str__(self) -> str:
-        return str(self.heap_list)
-
-    def __repr__(self) -> str:
-        return str(self.heap_list)
-
-    def __iter__(self):
-        return iter(self.heap_list)
-
-    @staticmethod
-    def parent(pos) -> int:
-        return pos//2
-
-    @staticmethod
-    def left_child(pos) -> int:
-        return pos*2 + 1
-
-    @staticmethod
-    def right_child(pos) -> int:
-        return pos*2 + 2
-
-    def swap(self, pos_1, pos_2):
-        self.heap_list[pos_1], self.heap_list[pos_2] = self.heap_list[pos_2], self.heap_list[pos_1]
-
-    def __getitem__(self, item):
-        return self.heap_list[item]
-
-    def heapify(self, pos: int, key: callable = lambda j: j.r):
-        pos_largest = pos
-        pos_left = self.left_child(pos)
-        pos_right = self.right_child(pos)
-        if pos_left < len(self) and key(self[pos_left]) < key(self[pos_largest]):
-            pos_largest = pos_left
-        if pos_right < len(self) and key(self[pos_right]) < key(self[pos_largest]):
-            pos_largest = pos_right
-        if pos_largest != pos:
-            self.swap(pos, pos_largest)
-            self.heapify(pos_largest)
-
-    def remove(self, x) -> None:
-        i = self.heap_list.index(x)
-        self.heap_list.pop(i)
-        self.heapify(i)
-
-    def append(self, x, key: callable) -> None:
-        #  key = lambda x: x
-        if len(self) == 0:
-            self.heap_list.append(x)
-        else:
-            self.heap_list.append(x)
-            current_position = len(self)-1
-            while True:
-                if key(x) < key(self.heap_list[self.parent(current_position)]):
-                    self.swap(current_position, self.parent(current_position))
-                    current_position = self.parent(current_position)
-                else:
-                    break
-
-
-def schrage(data: RPQSchedulingData or SchedulingData):
-    if type(data) == SchedulingData:
-        data = RPQSchedulingData(data)
-    n_g = []
-    n_n = data.jobs
-    sigma = []
-    t = (min(n_n, key=lambda job: job.r)).r  # zmienna pomocnczia
-    i = 1
-    cmax = 0
-    while len(n_g) != 0 or len(n_n) != 0:
-        while len(n_n) != 0 and (min(n_n, key=lambda job: job.r)).r <= t:  # tylko z dostępnych w N_N
-            j = min(n_n, key=lambda job: job.r)
-            n_g.append(j)
-            n_n.remove(j)
-        if len(n_g) == 0:
-            t = (min(n_n, key=lambda job: job.r)).r
-        else:
-            j = max(n_g, key=lambda job: job.q)
-            n_g.remove(j)
-            sigma.append(j)
-            t = t + j.p
-            i = i + 1
-            cmax = max(cmax, t + j.q)
-    print(data.schedule)
-    return cmax
-
-
-def pmtn_schrage(data: RPQSchedulingData or SchedulingData):
-    if type(data) == SchedulingData:
-        data = RPQSchedulingData(data)
-    n_g = []
-    n_n = data.jobs
-    t = 0
-    i = 1
-    cmax = 0
-    l = RPQJob(0, 0, 0, -1)
-    q_0 = math.inf
-    while len(n_g) != 0 or len(n_n) != 0:
-        while len(n_n) != 0 and (min(n_n, key=lambda job: job.r)).r <= t:  # tylko z dostępnych w N_N
-            j = min(n_n, key=lambda job: job.r)
-            n_g.append(j)
-            n_n.remove(j)
-            if j.q > l.q:
-                l.p = t - j.r
-                t = j.r
-                if l.p > 0:
-                    n_g.append(l)
-        if len(n_g) == 0:
-            t = (min(n_n, key=lambda job: job.r)).r
-        else:
-            j = max(n_g, key=lambda job: job.q)
-            n_g.remove(j)
-            l = j
-            t = t + j.p
-            i = i + 1
-            cmax = max(cmax, t + j.q)
-    return cmax
-
-
-def schrage_heap(data: RPQSchedulingData or SchedulingData):
-    if type(data) == SchedulingData:
-        data = RPQSchedulingData(data)
-    n_g = Heap()
-    n_n = MinHeap()
-    for job in data.jobs:
-        n_n.append(job, key=lambda j: j.r)
-    sigma = []
-    t = (min(n_n, key=lambda job: job.r)).r  # zmienna pomocnczia
-    i = 1
-    cmax = 0
-    while len(n_g) != 0 or len(n_n) != 0:
-        while len(n_n) != 0 and (min(n_n, key=lambda job: job.r)).r <= t:  # tylko z dostępnych w N_N
-            j = min(n_n, key=lambda job: job.r)
-            n_g.append(j, key=lambda x: x.q)
-            n_n.remove(j)
-        if len(n_g) == 0:
-            t = (min(n_n, key=lambda job: job.r)).r
-        else:
-            j = max(n_g, key=lambda job: job.q)
-            n_g.remove(j)
-            sigma.append(j)
-            t = t + j.p
-            i = i + 1
-            cmax = max(cmax, t + j.q)
-    print(data.schedule)
-    return cmax
