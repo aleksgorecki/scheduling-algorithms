@@ -133,7 +133,7 @@ def schrage(data: RPQSchedulingData or SchedulingData):
     if type(data) == SchedulingData:
         data = RPQSchedulingData(data)
     n_g = []
-    n_n = data.jobs
+    n_n = data.jobs.copy()
     sigma = []
     t = (min(n_n, key=lambda job: job.r)).r  # zmienna pomocnczia
     cmax = 0
@@ -158,7 +158,7 @@ def pmtn_schrage(data: RPQSchedulingData or SchedulingData):
     if type(data) == SchedulingData:
         data = RPQSchedulingData(data)
     n_g = []
-    n_n = data.jobs
+    n_n = data.jobs.copy()
     t = 0
     cmax = 0
     l = RPQJob(0, 0, 0, -1)

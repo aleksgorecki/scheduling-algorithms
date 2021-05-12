@@ -64,7 +64,6 @@ def get_job_c(data: RPQSchedulingData, job_a: RPQJob, job_b: RPQJob):
 
 
 def carlier(data: RPQSchedulingData, ub=math.inf) -> int:
-    # ub = math.inf
     best_schedule = []
     u = schrage(data)
     if u < ub:
