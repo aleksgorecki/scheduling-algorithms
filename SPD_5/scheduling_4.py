@@ -150,7 +150,7 @@ def schrage(data: RPQSchedulingData or SchedulingData):
             sigma.append(j)
             t = t + j.p
             cmax = max(cmax, t + j.q)
-    print(data.schedule)
+    data.schedule = sigma
     return cmax
 
 
@@ -206,6 +206,7 @@ def schrage_heap(data: RPQSchedulingData or SchedulingData):
             sigma.append(j)
             t = t + j.p
             cmax = max(cmax, t + j.q)
+    data.schedule = sigma
     return cmax
 
 
