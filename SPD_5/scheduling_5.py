@@ -63,11 +63,9 @@ def get_job_c(data: RPQSchedulingData, job_a: RPQJob, job_b: RPQJob):
     return viable_jobs[len(viable_jobs) - 1]
 
 
-def carlier(data: RPQSchedulingData) -> int:
-    ub = math.inf
+def carlier(data: RPQSchedulingData, ub=math.inf) -> int:
+    # ub = math.inf
     best_schedule = []
-    r_pi = 0
-    q_pi = 0
     u = schrage(data)
     if u < ub:
         ub = u
@@ -85,28 +83,26 @@ def carlier(data: RPQSchedulingData) -> int:
     r_k = min(k, key=lambda job: job.r)
     q_k = min(k, key=lambda job: job.q)
     p_k = sum(job.p for job in k)
-    r_pi = max(r_pi, r_k + p_k)
+    c.r = max(c.r, r_k + p_k)
     lb = pmtn_schrage(data)
     h_k = r_k + q_k + p_k
     h_k_c = min(k_c, key=lambda job: job.r) + min(k_c, key=lambda job: job.q) + sum(job.p for job in k_c)
     lb = max(h_k, h_k_c, lb)
     if lb < ub:
-        carlier(data)
-    r_pi = max(r_pi, r_k + p_k)  # odtworzenie ?
-    q_pi = max(q_pi, q_k + p_k)
+        carlier(data, ub)
+    c.r = max(c.r, r_k + p_k)  # odtworzenie ?
+    c.q = max(c.q, q_k + p_k)
     lb = pmtn_schrage(data)
     h_k = r_k + q_k + p_k
     h_k_c = min(k_c, key=lambda job: job.r) + min(k_c, key=lambda job: job.q) + sum(job.p for job in k_c)
     lb = max(h_k, h_k_c, lb)
     if lb < ub:
-        carlier(data)
-    q_pi = max(q_pi, q_k + p_k)  # odtworzenie ?
-
-
-
-
+        carlier(data, ub)
+    c.q = max(c.q, q_k + p_k)  # odtworzenie ?
 
 
 if __name__ == "__main__":
-
+    dummy = read_data_file(filename="data/in50.txt", n_sets=1, no_names=True)[0]
+    dummy = RPQSchedulingData(dummy)
+    print(carlier(dummy))
     pass
