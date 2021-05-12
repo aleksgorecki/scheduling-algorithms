@@ -49,11 +49,13 @@ def get_job_a(data: RPQSchedulingData, cmax: int, job_b: RPQJob):
     return viable_jobs[0]
 
 
-def get_job_c(data: RPQSchedulingData, job_b: RPQJob):
+def get_job_c(data: RPQSchedulingData, job_a: RPQJob, job_b: RPQJob):
     if data.schedule is None:
         raise Exception
     viable_jobs = []
-    for job in data.schedule:
+    job_a_index = data.schedule.index(job_a)
+    job_b_index = data.schedule.index(job_b)
+    for job in data.schedule[job_a_index:job_b_index]:
         if job.q < job_b.q:
             viable_jobs.append(job)
     if not viable_jobs:
@@ -72,25 +74,30 @@ def carlier(data: RPQSchedulingData) -> int:
         best_schedule = data.schedule
     b = get_job_b(data, u)
     a = get_job_a(data, u, b)
-    c = get_job_c(data, b)
+    c = get_job_c(data, a, b)
     if c is None:
         data.schedule = best_schedule
         return u
     job_c_index = data.schedule.index(c)
     job_b_index = data.schedule.index(b)
     k = data.schedule[job_c_index+1:job_b_index]  # blok zadań
+    k_c = data.schedule[job_c_index:job_b_index]
     r_k = min(k, key=lambda job: job.r)
     q_k = min(k, key=lambda job: job.q)
     p_k = sum(job.p for job in k)
     r_pi = max(r_pi, r_k + p_k)
     lb = pmtn_schrage(data)
-    # lb = max()
+    h_k = r_k + q_k + p_k
+    h_k_c = min(k_c, key=lambda job: job.r) + min(k_c, key=lambda job: job.q) + sum(job.p for job in k_c)
+    lb = max(h_k, h_k_c, lb)
     if lb < ub:
         carlier(data)
     r_pi = max(r_pi, r_k + p_k)  # odtworzenie ?
     q_pi = max(q_pi, q_k + p_k)
     lb = pmtn_schrage(data)
-    #lb = max()
+    h_k = r_k + q_k + p_k
+    h_k_c = min(k_c, key=lambda job: job.r) + min(k_c, key=lambda job: job.q) + sum(job.p for job in k_c)
+    lb = max(h_k, h_k_c, lb)
     if lb < ub:
         carlier(data)
     q_pi = max(q_pi, q_k + p_k)  # odtworzenie ?
