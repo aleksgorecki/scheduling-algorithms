@@ -88,7 +88,7 @@ def carlier(data: RPQSchedulingData, ub=math.inf):
     h_k_c = min(k_c, key=lambda job: job.r).r + min(k_c, key=lambda job: job.q).q + sum(job.p for job in k_c)
     lb = max(h_k, h_k_c, lb)
     if lb < ub:
-        carlier(data, ub)
+        cmax = carlier(data, ub)
     c.r = max(c.r, r_k + p_k)  # odtworzenie ?
     c.q = max(c.q, q_k + p_k)
     lb = pmtn_schrage(data)
@@ -96,8 +96,9 @@ def carlier(data: RPQSchedulingData, ub=math.inf):
     h_k_c = min(k_c, key=lambda job: job.r).r + min(k_c, key=lambda job: job.q).q + sum(job.p for job in k_c)
     lb = max(h_k, h_k_c, lb)
     if lb < ub:
-        carlier(data, ub)
+        cmax = carlier(data, ub)
     c.q = max(c.q, q_k + p_k)  # odtworzenie ?
+    return cmax
 
 
 if __name__ == "__main__":
