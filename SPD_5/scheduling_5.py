@@ -64,6 +64,8 @@ def get_job_c(data: RPQSchedulingData, job_a: RPQJob, job_b: RPQJob):
 
 
 def carlier(data: RPQSchedulingData, ub=math.inf):
+    if type(data) == SchedulingData:
+        data = RPQSchedulingData(data)
     best_schedule = []
     u = schrage(data)
     if u < ub:
@@ -98,10 +100,61 @@ def carlier(data: RPQSchedulingData, ub=math.inf):
     if lb < ub:
         cmax = carlier(data, ub)
     c.q = max(c.q, q_k + p_k)  # odtworzenie ?
+    if cmax is None:
+        cmax = u
+    return cmax
+
+
+def carlier_heap(data: RPQSchedulingData, ub=math.inf):
+    if type(data) == SchedulingData:
+        data = RPQSchedulingData(data)
+    best_schedule = []
+    u = schrage_heap(data)
+    if u < ub:
+        ub = u
+        best_schedule = data.schedule
+    b = get_job_b(data, u)
+    a = get_job_a(data, u, b)
+    c = get_job_c(data, a, b)
+    if c is None:
+        data.schedule = best_schedule
+        return u
+    job_c_index = data.schedule.index(c)
+    job_b_index = data.schedule.index(b)
+    k = data.schedule[job_c_index+1:job_b_index+1]  # blok zadań
+    k_c = data.schedule[job_c_index:job_b_index+1]
+    r_k = min(k, key=lambda job: job.r).r
+    q_k = min(k, key=lambda job: job.q).q
+    p_k = sum(job.p for job in k)
+    c.r = max(c.r, r_k + p_k)
+    lb = pmtn_schrage_heap(data)
+    h_k = r_k + q_k + p_k
+    h_k_c = min(k_c, key=lambda job: job.r).r + min(k_c, key=lambda job: job.q).q + sum(job.p for job in k_c)
+    lb = max(h_k, h_k_c, lb)
+    if lb < ub:
+        cmax = carlier_heap(data, ub)
+    c.r = max(c.r, r_k + p_k)  # odtworzenie ?
+    c.q = max(c.q, q_k + p_k)
+    lb = pmtn_schrage_heap(data)
+    h_k = r_k + q_k + p_k
+    h_k_c = min(k_c, key=lambda job: job.r).r + min(k_c, key=lambda job: job.q).q + sum(job.p for job in k_c)
+    lb = max(h_k, h_k_c, lb)
+    if lb < ub:
+        cmax = carlier_heap(data, ub)
+    c.q = max(c.q, q_k + p_k)  # odtworzenie ?
+    if cmax is None:
+        cmax = u
     return cmax
 
 
 if __name__ == "__main__":
-    dummy = read_data_file(filename="data/in50.txt", n_sets=1, no_names=True)[0]
-    dummy = RPQSchedulingData(dummy)
-    print(carlier(dummy))
+
+    print("carlier:")
+    rpq_l = read_data_file_rpq(filename="data/mm.data.txt", n_sets=8, no_names=False)
+    rpq_l = []
+    #dummy = RPQSchedulingData(read_data_file_rpq(filename="data/mm.data.txt", n_sets=1, no_names=False)[0])
+    #print(carlier_heap(dummy))
+    # dummy = RPQSchedulingData(read_data_file(filename="data/in100.txt", n_sets=1, no_names=True)[0])
+    # print(carlier(dummy))
+    # dummy = RPQSchedulingData(read_data_file(filename="data/in200.txt", n_sets=1, no_names=True)[0])
+    # print(carlier(dummy))

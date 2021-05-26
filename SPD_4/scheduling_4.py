@@ -150,7 +150,6 @@ def schrage(data: RPQSchedulingData or SchedulingData):
             sigma.append(j)
             t = t + j.p
             cmax = max(cmax, t + j.q)
-    print(data.schedule)
     return cmax
 
 
@@ -270,3 +269,12 @@ def read_data_file_rpq(filename: str, n_sets: int, no_names: bool = False) -> ty
             ret.append(SchedulingData("no_name", n_jobs, 3, t_matrix))
     file.close()
     return ret
+
+if __name__ == "__main__":
+    print("schrage:")
+    dummy = RPQSchedulingData(read_data_file(filename="data/in50.txt", n_sets=1, no_names=True)[0])
+    print(schrage(dummy))
+    dummy = RPQSchedulingData(read_data_file(filename="data/in100.txt", n_sets=1, no_names=True)[0])
+    print(schrage(dummy))
+    dummy = RPQSchedulingData(read_data_file(filename="data/in200.txt", n_sets=1, no_names=True)[0])
+    print(schrage(dummy))

@@ -1,32 +1,33 @@
-from scheduling_4 import *
+from scheduling_5 import *
+import scheduling_5_rpq_tabu_search
 import csv
 import timer
 
 
 default_data_file = "data/in50.txt"
-csv_filename = "20k"
+csv_filename = "1000-2"
 max_dataset_index = -2
 excel_lang = "pl"  # "eng"
-mode = 2  # 2
+mode = 1  # 2
 
 
-datasets = read_data_file(default_data_file, max_dataset_index+1, no_names=True)
+#datasets = read_data_file(default_data_file, max_dataset_index+1, no_names=True)
 #datasets = read_data_file_rpq(default_data_file, max_dataset_index+1, no_names=False)
-datasets = datasets[0:len(datasets)]
+#datasets = datasets[0:len(datasets)]
 #datasets = [datasets[max_dataset_index]]
 # datasets = datasets[0:30]
 
 #datasets = [custom_dataset(n_jobs=3000, n_machines=3, name=n_jobs)]
 
-# datasets = []
-# for size in range(1, 20000, 500):
-#     dataset = custom_dataset(n_jobs=size, n_machines=3, name=str(size))
-#     datasets.append(dataset)
+datasets = []
+for size in range(10, 50, 10):
+     dataset = custom_dataset(n_jobs=size, n_machines=3, name=str(size))
+     datasets.append(dataset)
 
 
 class TabuSearchParams:
     def __init__(self, tabu_len: int = 10, neighbour_move=NeighbourMoves.swap,
-                 init_scheduling=johnson_rule_multiple, stopping_condition=IterationsCondition(50)):
+                 init_scheduling=johnson_rule_multiple, stopping_condition=IterationsCondition(20)):
         self.tabu_len = tabu_len
         self.neighbour_move = neighbour_move
         self.init_scheduling = init_scheduling
@@ -52,7 +53,10 @@ class AlgorithmCall:
 
 if mode == 1:
     timer = timer.Timer()
-    calls = [AlgorithmCall(schrage), AlgorithmCall(pmtn_schrage), AlgorithmCall(schrage_heap), AlgorithmCall(pmtn_schrage_heap)]
+    calls = [AlgorithmCall(carlier), AlgorithmCall(carlier_heap),
+             AlgorithmCall(scheduling_5_rpq_tabu_search.tabu_search_all_rpq,
+                           TabuSearchParams(10, scheduling_5_rpq_tabu_search.NeighbourMoves.swap, schrage,
+                                            scheduling_5_rpq_tabu_search.IterationsCondition(20)))]
     time_stats = {}
     cmax_stats = {}
     for dataset in datasets:

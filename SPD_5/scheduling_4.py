@@ -18,7 +18,7 @@ class RPQJob:
         self.id = job_id
 
     def __str__(self):
-        return f"{self.r} {self.p} {self.q}"
+        return f"{self.r} {self.p} {self.q} - id: {self.id}"
 
     def __repr__(self):
         return str(self)
