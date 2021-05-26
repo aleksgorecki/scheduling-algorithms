@@ -64,6 +64,7 @@ def get_job_c(data: RPQSchedulingData, job_a: RPQJob, job_b: RPQJob):
 
 
 def carlier(data: RPQSchedulingData, ub=math.inf):
+    cmax = None
     if type(data) == SchedulingData:
         data = RPQSchedulingData(data)
     best_schedule = []
@@ -106,6 +107,7 @@ def carlier(data: RPQSchedulingData, ub=math.inf):
 
 
 def carlier_heap(data: RPQSchedulingData, ub=math.inf):
+    cmax = None
     if type(data) == SchedulingData:
         data = RPQSchedulingData(data)
     best_schedule = []
@@ -148,13 +150,7 @@ def carlier_heap(data: RPQSchedulingData, ub=math.inf):
 
 
 if __name__ == "__main__":
-
     print("carlier:")
     rpq_l = read_data_file_rpq(filename="data/mm.data.txt", n_sets=8, no_names=False)
-    rpq_l = []
-    #dummy = RPQSchedulingData(read_data_file_rpq(filename="data/mm.data.txt", n_sets=1, no_names=False)[0])
-    #print(carlier_heap(dummy))
-    # dummy = RPQSchedulingData(read_data_file(filename="data/in100.txt", n_sets=1, no_names=True)[0])
-    # print(carlier(dummy))
-    # dummy = RPQSchedulingData(read_data_file(filename="data/in200.txt", n_sets=1, no_names=True)[0])
-    # print(carlier(dummy))
+    for data in rpq_l:
+        print(carlier(data))
