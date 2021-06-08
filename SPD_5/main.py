@@ -5,7 +5,7 @@ import timer
 
 
 default_data_file = "data/in50.txt"
-csv_filename = "1000-2"
+csv_filename = "1000-3"
 max_dataset_index = -2
 excel_lang = "pl"  # "eng"
 mode = 1  # 2
@@ -20,7 +20,7 @@ mode = 1  # 2
 #datasets = [custom_dataset(n_jobs=3000, n_machines=3, name=n_jobs)]
 
 datasets = []
-for size in range(10, 50, 10):
+for size in range(100, 1000, 100):
      dataset = custom_dataset(n_jobs=size, n_machines=3, name=str(size))
      datasets.append(dataset)
 
@@ -53,10 +53,10 @@ class AlgorithmCall:
 
 if mode == 1:
     timer = timer.Timer()
-    calls = [AlgorithmCall(carlier), AlgorithmCall(carlier_heap),
-             AlgorithmCall(scheduling_5_rpq_tabu_search.tabu_search_all_rpq,
-                           TabuSearchParams(10, scheduling_5_rpq_tabu_search.NeighbourMoves.swap, schrage,
-                                            scheduling_5_rpq_tabu_search.IterationsCondition(20)))]
+    calls = [AlgorithmCall(carlier), AlgorithmCall(carlier_heap)]
+             # AlgorithmCall(scheduling_5_rpq_tabu_search.tabu_search_all_rpq,
+             #               TabuSearchParams(10, scheduling_5_rpq_tabu_search.NeighbourMoves.swap, schrage,
+             #                                scheduling_5_rpq_tabu_search.IterationsCondition(20)))]
     time_stats = {}
     cmax_stats = {}
     for dataset in datasets:
