@@ -32,7 +32,7 @@ class RPQSchedulingData:
             else:
                 self.jobs = []
                 for job_id, row in enumerate(data.t_matrix):
-                    self.jobs.append(RPQJob(r=row[0], p=row[1], q=row[2], job_id=job_id))
+                    self.jobs.append(RPQJob(r=int(row[0]), p=int(row[1]), q=int(row[2]), job_id=job_id))
                 if len(self.jobs) != data.n_jobs:
                     raise Exception
         elif data is None and rpq_jobs is not None:
