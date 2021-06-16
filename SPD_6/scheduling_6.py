@@ -34,6 +34,8 @@ def rpq_ortools(data: RPQSchedulingData or SchedulingData):
         model_end_vars.append(end_var)
         model_interval_vars.append(interval_var)
 
+    model.AddNoOverlap(model_interval_vars)
+
 
     for task_number in range (0, len(data.jobs)):
         model.Add(model_start_vars[task_number] >= int(data.jobs[task_number].r))
@@ -45,7 +47,7 @@ def rpq_ortools(data: RPQSchedulingData or SchedulingData):
     model.Minimize(cmax_optimalization_objective)
 
     solver = cp_model.CpSolver()
-    solver.parameters.max_time_in_seconds = 300.0
+    solver.parameters.max_time_in_seconds = 300
     status = solver.Solve(model)
 
     if (status is not cp_model.OPTIMAL):
@@ -61,7 +63,7 @@ def rpq_ortools(data: RPQSchedulingData or SchedulingData):
     pi_order.sort(key=lambda x: x[1])
     pi_order = [x[0] for x in pi_order]
 
-    dataset.schedule = pi_order
+    data.schedule = pi_order
 
     return solver.ObjectiveValue()
 
@@ -72,11 +74,80 @@ def job_shob_ortools(data: SchedulingData):
 
 
 def flowshop_ortools(data: SchedulingData):
-    pass
+
+    model = cp_model.CpModel()
+
+    variable_max_value = 0
+    for job in data.t_matrix:
+        for operation in job:
+            variable_max_value = variable_max_value + operation
+    variable_min_value = 0
+
+    model_start_vars_tmp = []
+    model_end_vars_tmp = []
+    model_interval_vars_tmp = []
+
+    model_start_vars = []
+    model_end_vars = []
+    model_interval_vars = []
+
+    cmax_optimalization_objective = model.NewIntVar(variable_min_value, variable_max_value, 'cmax_makespan')
+
+    for job_id, job in enumerate(data.t_matrix):
+        for machine_id, operation in enumerate(job):
+            model_start_vars_tmp.clear()
+            model_end_vars_tmp.clear()
+            model_interval_vars_tmp.clear()
+
+            suffix = f"t:job {job_id} machine {machine_id}"
+            start_var = model.NewIntVar(variable_min_value, variable_max_value, 'start_' + suffix)
+            end_var = model.NewIntVar(variable_min_value, variable_max_value, 'end_' + suffix)
+            interval_var = model.NewIntervalVar(start_var, int(operation), end_var, 'interval_' + suffix)
+
+            model_start_vars_tmp.append(start_var)
+            model_end_vars_tmp.append(end_var)
+            model_interval_vars_tmp.append(interval_var)
+        model_start_vars.append(model_start_vars_tmp)
+        model_end_vars.append(model_end_vars_tmp)
+        model_interval_vars.append(model_interval_vars_tmp)
+
+
+    model.AddNoOverlap(model_interval_vars)
+
+    for task_number in range (0, data.n_jobs):
+        for machine_number in range(0, len(data.t_matrix[0])):
+            if task_number != 0:
+                model.Add(model_start_vars[task_number][machine_number] >= model_end_vars[task_number-1][machine_number])
+            if machine_number != 0:
+                model.Add(model_start_vars[task_number][machine_number] >= model_end_vars[task_number][machine_number-1])
+
+
+    model.Minimize(cmax_optimalization_objective)
+
+    solver = cp_model.CpSolver()
+    solver.parameters.max_time_in_seconds = 300.0
+    status = solver.Solve(model)
+
+    if (status is not cp_model.OPTIMAL):
+        status_readable = "not optimal solution 🙁"
+    else:
+        status_readable = "optimum found!"
+
+    pi_order = []
+
+    for task_number in range(0, data.n_jobs):
+        pi_order.append((task_number, solver.Value(model_start_vars[task_number])))
+
+    pi_order.sort(key=lambda x: x[1])
+    pi_order = [x[0] for x in pi_order]
+
+    dataset.schedule = pi_order
+
+    return solver.ObjectiveValue()
 
 
 if __name__ == "__main__":
-    default_data_file = "data/in50.txt"
+    default_data_file = "data/neh.data.txt"
     max_dataset_index = -2
     datasets = []
     for size in range(100, 1000, 100):
@@ -84,8 +155,8 @@ if __name__ == "__main__":
         datasets.append(dataset)
 
     dataset = datasets[0]
-    dataset = read_data_file(filename=default_data_file, no_names=True, n_sets=1)[0]
+    dataset = custom_dataset(n_jobs=50, n_machines=2, name="")
 
-    print(rpq_ortools(dataset))
-    print(schrage_heap(dataset))
+    print(flowshop_ortools(dataset))
+    print(johnson_rule_multiple(dataset))
 

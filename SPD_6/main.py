@@ -1,4 +1,4 @@
-from scheduling_5 import *
+from scheduling_6 import *
 import scheduling_5_rpq_tabu_search
 import csv
 import timer
@@ -8,7 +8,7 @@ default_data_file = "data/in50.txt"
 csv_filename = "1000-3"
 max_dataset_index = -2
 excel_lang = "pl"  # "eng"
-mode = 1  # 2
+mode = 2  # 2
 
 
 #datasets = read_data_file(default_data_file, max_dataset_index+1, no_names=True)
@@ -53,7 +53,7 @@ class AlgorithmCall:
 
 if mode == 1:
     timer = timer.Timer()
-    calls = [AlgorithmCall(carlier), AlgorithmCall(carlier_heap)]
+    calls = [AlgorithmCall(rpq_ortools), AlgorithmCall(schrage), AlgorithmCall(pmtn_schrage_heap), AlgorithmCall(schrage_heap)]
              # AlgorithmCall(scheduling_5_rpq_tabu_search.tabu_search_all_rpq,
              #               TabuSearchParams(10, scheduling_5_rpq_tabu_search.NeighbourMoves.swap, schrage,
              #                                scheduling_5_rpq_tabu_search.IterationsCondition(20)))]
@@ -108,7 +108,7 @@ if mode == 1:
 
 elif mode == 2:
     print_schedule = False
-    calls = [AlgorithmCall(schrage), AlgorithmCall(schrage_heap), AlgorithmCall(pmtn_schrage), AlgorithmCall(pmtn_schrage_heap)]
+    calls = [AlgorithmCall(rpq_ortools), AlgorithmCall(schrage_heap)]
     timer = timer.Timer()
     for dataset in datasets:
         print(dataset.name)
